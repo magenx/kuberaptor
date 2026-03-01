@@ -2,10 +2,9 @@
 > [kube`raptor]
 
 <p align="center">
-<img width="356" height="170" alt="Hetzner-Logo-Hosted_in_Germany" src="https://github.com/user-attachments/assets/0838a7ab-340f-4c60-96dd-602f3b2e22ed" />
-
-<img width="180" height="230" alt="k3s" src="https://github.com/user-attachments/assets/5d6a171f-e711-4660-8fa5-89022dd30664" />
-<img width="224" height="324" alt="kuberaptor-cardboard" src="https://github.com/user-attachments/assets/5d8fcd5b-6a7d-47d0-8fd7-bb649bb4ee9f" />
+<img width="324" height="170" alt="Hetzner-Logo-Hosted_in_Europe" src="https://github.com/user-attachments/assets/22d71337-fab9-4949-b153-e5614a1f5114" />
+<img width="120" height="130" alt="k3s" src="https://github.com/user-attachments/assets/226f1609-37e1-4b64-b868-9c034840f9fc" />
+<img width="224" height="224" alt="kuberaptor-cardboard" src="https://github.com/user-attachments/assets/fcd1d643-1768-4007-9633-fb5585d03e91" />
 
 </p>
 
