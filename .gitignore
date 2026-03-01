@@ -1,0 +1,22 @@
+# Build artifacts
+dist/
+coverage.out
+
+# Binary
+/kuberaptor
+
+# Test binaries
+*.test
+
+# Go workspace file
+go.work
+cluster.yaml.generated
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Deployment secrets
+.env
+/etc/default/kuberaptor
