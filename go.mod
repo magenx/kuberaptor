@@ -1,8 +1,6 @@
 module github.com/magenx/kuberaptor
 
-go 1.24.0
-
-toolchain go1.24.11
+go 1.26.0
 
 require (
 	github.com/hetznercloud/hcloud-go/v2 v2.36.0
