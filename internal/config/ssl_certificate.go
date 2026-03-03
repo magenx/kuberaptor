@@ -1,3 +1,7 @@
+// Kuberaptor
+// Copyright (c) 2026 Kuberaptor (https://kuberaptor.com)
+// SPDX-License-Identifier: MIT
+
 package config
 
 // SSLCertificate represents SSL certificate configuration for managed certificates
