@@ -128,7 +128,7 @@ func TestRunWithFilteredPrefix(t *testing.T) {
 	shell := NewShell()
 
 	// Test with nil filter (should print all output)
-	// We'll just verify it doesn't error - actual output verification would require
+	// We'll just verify it doesnt error - actual output verification would require
 	// capturing stdout which is complex in Go tests
 	err := shell.RunWithFilteredPrefix("test", "echo", nil, "hello world")
 	if err != nil {
