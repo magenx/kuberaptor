@@ -47,9 +47,17 @@ jobs:
           config-file: ${{ env.PRERELEASE_CONFIG }}
           manifest-file: ${{ env.PRERELEASE_MANIFEST }}
 
+  codeql-security-scan:
+    uses: ./.github/workflows/codeql-security-scan.yml
+    with:
+      sha: ${{ github.sha }}
+    permissions:
+      contents: read
+      security-events: write
+
   build_prerelease:
     name: Build & upload artifacts to prerelease draft
-    needs: pre-release
+    needs: [pre-release,codeql-security-scan]
     if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/build_for_release.yml
     with:
@@ -97,7 +105,7 @@ jobs:
 
   build_release:
     name: Build & upload artifacts to stable release draft
-    needs: release
+    needs: [release, codeql-security-scan]
     if: ${{ needs.release.outputs.releases_created == 'true' }}
     uses: ./.github/workflows/build_for_release.yml
     with:
