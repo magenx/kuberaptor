@@ -31,6 +31,7 @@
       "component": "kuberaptor",
       "release-type": "simple",
       "prerelease": true,
+      "draft": true,
       "prerelease-type": "rc",
       "versioning": "prerelease",
       "pull-request-title-pattern": "chore${scope}: kuberaptor ${version}",
