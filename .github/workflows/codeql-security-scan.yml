@@ -1,0 +1,60 @@
+name: CodeQL Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: "Commit SHA to scan"
+        required: true
+        type: string
+    outputs:
+      scan_passed:
+        description: "Whether security scan passed"
+        value: ${{ jobs.codeql-security-scan.outputs.scan_passed }}
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  GO_VERSION: ${{ vars.GO_VERSION }}
+
+jobs:
+  ### 🔒 CODEQL SECURITY SCAN
+  codeql-security-scan:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+    outputs:
+      scan_passed: ${{ steps.codeql-analyze.outcome == 'success' }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code at release sha
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 1
+
+      - name: Set up Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Initialize CodeQL
+        id: codeql-init
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 #v4.35.1
+        with:
+          languages: go
+          build-mode: autobuild
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        id: codeql-analyze
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 #v4.35.1
+        with:
+          category: "/language:go"
+          fail-on: error
+          upload: always
