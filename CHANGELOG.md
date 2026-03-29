@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.0.2-rc.1](https://github.com/magenx/kuberaptor/compare/v0.0.2-rc...v0.0.2-rc.1) (2026-03-29)
+
+
+### 🚦 Maintenance
+
+* Add draft flag to prerelease configuration ([#20](https://github.com/magenx/kuberaptor/issues/20)) ([af18db7](https://github.com/magenx/kuberaptor/commit/af18db717312eee8bbe8a16c42c99b146f42f7f5))
+* Add draft option to release configuration ([#19](https://github.com/magenx/kuberaptor/issues/19)) ([5259fea](https://github.com/magenx/kuberaptor/commit/5259fea65e1518dfaa6e632799fc6b6788e8a226))
+* **deps:** bump golang.org/x/crypto from 0.48.0 to 0.49.0 ([#18](https://github.com/magenx/kuberaptor/issues/18)) ([7d18028](https://github.com/magenx/kuberaptor/commit/7d1802861a8da950f2b5f503cfffe1b729aa371f))
+* Refactor workflow to support reusable build inputs ([#22](https://github.com/magenx/kuberaptor/issues/22)) ([e132304](https://github.com/magenx/kuberaptor/commit/e13230448a3ffee52562c3dc824397b5651c6ae6))
+* Update release workflow for prerelease and release jobs ([#21](https://github.com/magenx/kuberaptor/issues/21)) ([3612fe4](https://github.com/magenx/kuberaptor/commit/3612fe43c5f26bbc15d46cffb7c0f7937a02ebf8))
+
 ## [0.0.2-rc](https://github.com/magenx/kuberaptor/compare/v0.0.1...v0.0.2-rc) (2026-03-03)
 
 
