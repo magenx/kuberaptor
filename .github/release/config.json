@@ -31,6 +31,7 @@
     "component": "kuberaptor",
     "release-type": "simple",
     "prerelease": false,
+    "draft": true,
     "pull-request-title-pattern": "chore${scope}: kuberaptor ${version}",
     "pull-request-header": ":robot: I have created a [ release ]",
     "include-v-in-tag": true,
