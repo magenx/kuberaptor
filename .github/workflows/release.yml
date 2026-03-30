@@ -104,7 +104,7 @@ jobs:
 
   build_release:
     name: Build & upload artifacts to stable release draft
-    needs: [release, codeql-security-scan]
+    needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
     uses: ./.github/workflows/build_for_release.yml
     with:
