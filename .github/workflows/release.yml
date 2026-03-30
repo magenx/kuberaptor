@@ -6,9 +6,7 @@ on:
       - main
     paths-ignore:
       - '.github/**'
-      - 'config.yaml'
-      - 'README.md'
-      - 'CODE_OF_CONDUCT.md'
+      - '**.md'
 
 permissions:
   contents: write
