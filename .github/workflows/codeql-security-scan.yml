@@ -26,10 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       scan_passed: ${{ steps.codeql-analyze.outcome == 'success' }}
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
     steps:
       - name: Checkout code at release sha
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
