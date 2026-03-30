@@ -50,13 +50,13 @@ jobs:
     if: ${{ needs.pre-release.outputs.releases_created == 'true' }}
     uses: ./.github/workflows/codeql-security-scan.yml
     with:
-      sha: ${{ github.sha }}
+      sha: ${{ needs.pre-release.outputs.sha }}
     permissions: 
       security-events: write
 
   build_prerelease:
     name: Build & upload artifacts to prerelease draft
-    needs: [pre-release,codeql-security-scan]
+    needs: [pre-release, codeql-security-scan]
     if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/build_for_release.yml
     with:
