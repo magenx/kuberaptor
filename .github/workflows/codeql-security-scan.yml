@@ -13,7 +13,6 @@ on:
         value: ${{ jobs.codeql-security-scan.outputs.scan_passed }}
 
 permissions:
-  contents: read
   security-events: write
 
 env:
