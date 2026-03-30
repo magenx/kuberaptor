@@ -14,8 +14,6 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
-  repository-projects: read
-  actions: read
 
 env:
   PRERELEASE_CONFIG: ".github/release/prerelease-config.json"
@@ -48,11 +46,14 @@ jobs:
           manifest-file: ${{ env.PRERELEASE_MANIFEST }}
 
   codeql-security-scan:
+    needs: pre-release
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' }}
     uses: ./.github/workflows/codeql-security-scan.yml
     with:
       sha: ${{ github.sha }}
     permissions:
       contents: read
+      actions: read
       security-events: write
 
   build_prerelease:
