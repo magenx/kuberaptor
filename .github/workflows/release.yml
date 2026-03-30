@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   pre-release:
-    name: Create pre-release PR + draft prerelease
+    name: Create pre-release PR + draft pre-release
     runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.pre-release.outputs.releases_created }}
@@ -47,7 +47,7 @@ jobs:
 
   codeql-security-scan:
     needs: pre-release
-    if: ${{ needs.pre-release.outputs.releases_created == 'true' }}
+    if: ${{ needs.pre-release.outputs.releases_created == 'false' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/codeql-security-scan.yml
     with:
       sha: ${{ needs.pre-release.outputs.sha }}
@@ -55,7 +55,7 @@ jobs:
       security-events: write
 
   build_prerelease:
-    name: Build & upload artifacts to prerelease draft
+    name: Build & upload artifacts to pre-release draft
     needs: [pre-release, codeql-security-scan]
     if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/build_for_release.yml
@@ -67,12 +67,12 @@ jobs:
       KUBERAPTOR_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
 
   publish_prerelease:
-    name: Publish prerelease (draft -> published)
+    name: Publish pre-release (draft -> published)
     needs: [pre-release, build_prerelease]
     if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     runs-on: ubuntu-latest
     steps:
-      - name: Mark prerelease as published
+      - name: Mark pre-release as published
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           token: ${{ secrets.KUBERAPTOR_TOKEN }}
