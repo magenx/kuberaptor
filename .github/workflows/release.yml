@@ -51,10 +51,6 @@ jobs:
     uses: ./.github/workflows/codeql-security-scan.yml
     with:
       sha: ${{ github.sha }}
-    permissions:
-      contents: read
-      actions: read
-      security-events: write
 
   build_prerelease:
     name: Build & upload artifacts to prerelease draft
