@@ -47,7 +47,7 @@ jobs:
 
   codeql-security-scan:
     needs: pre-release
-    if: ${{ needs.pre-release.outputs.releases_created == 'false' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/codeql-security-scan.yml
     with:
       sha: ${{ needs.pre-release.outputs.sha }}
