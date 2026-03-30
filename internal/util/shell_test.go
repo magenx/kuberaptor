@@ -65,7 +65,7 @@ func TestStreamWithPrefixFiltered(t *testing.T) {
 			// Create a reader from the input string
 			reader := strings.NewReader(tt.input)
 
-			// We cant easily capture stdout in tests, so we'll test the logic directly
+			// We cant easily capture stdout in test, so we'll test the logic directly
 			// by creating a custom version that writes to a buffer
 			buf := make([]byte, 4096)
 			leftover := ""
