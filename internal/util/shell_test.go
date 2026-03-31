@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// TestStreamWithPrefixFiltered test the filtering functionality
+// TestStreamWithPrefixFiltered tests the filtering functionality
 func TestStreamWithPrefixFiltered(t *testing.T) {
 	tests := []struct {
 		name           string
