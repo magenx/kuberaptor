@@ -1,0 +1,129 @@
+name: Build Go App for Release
+
+on:
+  workflow_call:
+    inputs:
+      tag_name:
+        description: "Tag to build"
+        required: true
+        type: string
+      sha:
+        description: "Commit SHA to checkout"
+        required: true
+        type: string
+      prerelease:
+        description: "Release type - prerelease or release"
+        required: true
+        type: boolean
+    secrets:
+      KUBERAPTOR_TOKEN:
+        required: true
+
+env:
+  PRELELEASE_TYPE: ${{ vars.PRERELEASE_TYPE }}
+  GO_VERSION: ${{ vars.GO_VERSION }}
+
+concurrency:
+  group: build
+  cancel-in-progress: true
+
+jobs:
+  ### 📦 BUILD RELEASE MATRIX
+  build-release:
+    name: Build Go Binary - ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            goos: linux
+            goarch: arm64
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+            goos: darwin
+            goarch: arm64
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+    steps:
+      - name: Checkout code at release sha
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 1
+
+      - name: Set up Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run all tests
+        id: test
+        env:
+          CGO_ENABLED: 1
+        run: |
+          # Run all test
+          go test -v -race -coverprofile=coverage.out ./...
+      
+      - name: Build go binary
+        id: build
+        env:
+          CGO_ENABLED: 0
+        run: |
+          # Fetch the version from the GitHub release tag
+          VERSION="${{ github.event.release.tag_name }}"
+          
+          # Dynamically set the binary name based on OS and architecture
+          BINARY_NAME_ARCH="${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}"
+          echo "binary_name_arch=${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}" >> ${GITHUB_OUTPUT}
+          echo "binary_name=${GITHUB_REPOSITORY##*/}" >> ${GITHUB_OUTPUT}
+          
+          echo "Building ${BINARY_NAME_ARCH} with version ${VERSION}"
+          
+          # Build the Go binary with version information embedded via -ldflags
+          go build -ldflags "-X github.com/magenx/${GITHUB_REPOSITORY##*/}/pkg/version.Version=${VERSION} -s -w" -o "${BINARY_NAME_ARCH}" ./cmd/${GITHUB_REPOSITORY##*/}
+          
+          # Check if the binary was successfully built
+          if [ ! -f "${BINARY_NAME_ARCH}" ]; then
+            echo "Error: Build failed. Binary not found!"
+            exit 1
+          fi
+          
+          # Create checksum
+          echo "checksum=$(sha256sum ${BINARY_NAME_ARCH})" >> ${GITHUB_OUTPUT}
+
+      - name: Upload artifacts to release
+        id: upload-artifact
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          token: ${{ secrets.KUBERAPTOR_TOKEN }}
+          tag_name: ${{ inputs.tag_name }}
+          files: |
+            ${{ steps.build.outputs.binary_name_arch }}
+          draft: true
+          prerelease: ${{ inputs.prerelease }}
+          append_body: true
+          body: |
+            <details>
+            <summary>Installation for <strong>${{ matrix.os }} (${{ matrix.arch }})</strong></summary>
+            <pre><code>
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.build.outputs.binary_name_arch }}
+            if echo "${{ steps.build.outputs.checksum }}" | sha256sum -c; then
+              echo "✅ Verification passed"
+              chmod +x ${{ steps.build.outputs.binary_name_arch }}
+              mv ${{ steps.build.outputs.binary_name_arch }} /usr/local/bin/${{ steps.build.outputs.binary_name }}
+              ${{ steps.build.outputs.binary_name }} version
+            else
+              echo "❌ Verification failed"
+            fi
+            </code></pre>
+            </details>

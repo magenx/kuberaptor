@@ -1,0 +1,11 @@
+#cloud-config
+write_files:
+  - path: /etc/network/interfaces
+    content: |
+      auto eth0
+      iface eth0 inet dhcp
+          post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+          post-up iptables -t nat -A POSTROUTING -s '{{ .Subnet }}' -o eth0 -j MASQUERADE
+
+runcmd:
+  - systemctl restart networking

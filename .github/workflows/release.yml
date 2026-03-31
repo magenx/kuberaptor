@@ -1,0 +1,127 @@
+name: Pre-release and Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  PRERELEASE_CONFIG: ".github/release/prerelease-config.json"
+  PRERELEASE_MANIFEST: ".github/release/prerelease-manifest.json"
+  RELEASE_CONFIG: ".github/release/config.json"
+  RELEASE_MANIFEST: ".github/release/manifest.json"
+
+concurrency:
+  group: release
+
+jobs:
+  pre-release:
+    name: Create pre-release PR + draft pre-release
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.pre-release.outputs.releases_created }}
+      tag_name: ${{ steps.pre-release.outputs.tag_name }}
+      prs_created: ${{ steps.pre-release.outputs.prs_created }}
+      pr: ${{ steps.pre-release.outputs.pr }}
+      upload_url: ${{ steps.pre-release.outputs.upload_url }}
+      version: ${{ steps.pre-release.outputs.version }}
+      sha: ${{ steps.pre-release.outputs.sha }}
+    steps:
+      - name: Create pre-release
+        id: pre-release
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
+        with:
+          token: ${{ secrets.KUBERAPTOR_TOKEN }}
+          config-file: ${{ env.PRERELEASE_CONFIG }}
+          manifest-file: ${{ env.PRERELEASE_MANIFEST }}
+
+  codeql-security-scan:
+    needs: pre-release
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    uses: ./.github/workflows/codeql-security-scan.yml
+    with:
+      sha: ${{ needs.pre-release.outputs.sha }}
+    permissions: 
+      security-events: write
+
+  build_prerelease:
+    name: Build & upload artifacts to pre-release draft
+    needs: [pre-release, codeql-security-scan]
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    uses: ./.github/workflows/build_for_release.yml
+    with:
+      tag_name: ${{ needs.pre-release.outputs.tag_name }}
+      sha: ${{ needs.pre-release.outputs.sha }}
+      prerelease: true
+    secrets:
+      KUBERAPTOR_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
+
+  publish_prerelease:
+    name: Publish pre-release (draft -> published)
+    needs: [pre-release, build_prerelease]
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark pre-release as published
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          token: ${{ secrets.KUBERAPTOR_TOKEN }}
+          tag_name: ${{ needs.pre-release.outputs.tag_name }}
+          draft: false
+          prerelease: true
+
+  release:
+    name: Create release PR + draft stable release
+    needs: pre-release
+    if: ${{ needs.pre-release.outputs.releases_created == 'true' && contains(needs.pre-release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      pr: ${{ steps.release.outputs.pr }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      version: ${{ steps.release.outputs.version }}
+      sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Create release PR
+        id: release
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
+        with:
+          token: ${{ secrets.KUBERAPTOR_TOKEN }}
+          config-file: ${{ env.RELEASE_CONFIG }}
+          manifest-file: ${{ env.RELEASE_MANIFEST }}
+
+  build_release:
+    name: Build & upload artifacts to stable release draft
+    needs: release
+    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    uses: ./.github/workflows/build_for_release.yml
+    with:
+      tag_name: ${{ needs.release.outputs.tag_name }}
+      sha: ${{ needs.release.outputs.sha }}
+      prerelease: false
+    secrets:
+      KUBERAPTOR_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
+
+  publish_release:
+    name: Publish stable release (draft -> published)
+    needs: [release, build_release]
+    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark stable release as published
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          token: ${{ secrets.KUBERAPTOR_TOKEN }}
+          tag_name: ${{ needs.release.outputs.tag_name }}
+          draft: false
+          prerelease: false

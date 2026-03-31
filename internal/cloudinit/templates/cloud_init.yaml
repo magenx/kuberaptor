@@ -1,0 +1,20 @@
+#cloud-config
+preserve_hostname: true
+
+{{ .growpart_str }}
+
+write_files:
+{{ .growroot_disabled_file }}
+
+{{ .eth1_str }}
+
+{{ .firewall_files }}
+
+{{ .ssh_files }}
+
+{{ .init_files }}
+
+packages: [{{ .packages_str }}]
+
+runcmd:
+{{ .post_create_commands_str }}
