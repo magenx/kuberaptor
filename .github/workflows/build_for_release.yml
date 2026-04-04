@@ -116,7 +116,7 @@ jobs:
             <details>
             <summary>Installation for <strong>${{ matrix.os }} (${{ matrix.arch }})</strong></summary>
             <pre><code>
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.build.outputs.binary_name_arch }}
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ steps.build.outputs.binary_name_arch }}
             if echo "${{ steps.build.outputs.checksum }}" | sha256sum -c; then
               echo "✅ Verification passed"
               chmod +x ${{ steps.build.outputs.binary_name_arch }}
