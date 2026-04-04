@@ -856,11 +856,13 @@ All dependencies are statically linked into the binary.
 
 This project includes a management UI built with React, Vite, TypeScript, and Tailwind CSS.
 
-**Live Site:** [https://magenx.github.io/kuberaptor/](https://magenx.github.io/kuberaptor/)
+**Live Site:** [https://www.kuberaptor.com/](https://www.kuberaptor.com/)
 
 The website source code is in the `ui/` folder and is automatically deployed to GitHub Pages when changes are pushed to the main branch.
 
 ---
+<img width="1920" height="1080" alt="termtop" src="https://github.com/user-attachments/assets/8cc8a31a-78cf-4e8d-a13e-21287d2cd69a" />
+<img width="1920" height="1080" alt="termbottom" src="https://github.com/user-attachments/assets/f3911a76-3f3d-4c35-b1f4-156bb83dfa60" />
 
 
 **Project:** Kuberaptor  
