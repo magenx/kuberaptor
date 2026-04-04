@@ -80,7 +80,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           # Fetch the version from the GitHub release tag
-          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${{ inputs.tag_name }}"
           
           # Dynamically set the binary name based on OS and architecture
           BINARY_NAME_ARCH="${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}"
