@@ -540,6 +540,10 @@ ssl_certificate:
   preserve: true           # Preserve certificate during cluster deletion to avoid Let's Encrypt rate limits
   # Creates certificate for example.com and *.example.com
   # Certificate is automatically validated via DNS and attached to HTTPS services
+  # Preconfigure DNS:
+  # _acme-challenge.example.com	IN	NS	hydrogen.ns.hetzner.com.
+  # _acme-challenge.example.com	IN	NS	helium.ns.hetzner.com.
+  # _acme-challenge.example.com	IN	NS	oxygen.ns.hetzner.com.
   # Setting preserve:true reuses existing certificates instead of requesting new ones
 
 # Addons installation required for cluster functionality
