@@ -45,6 +45,18 @@ func TestDNSZoneSetDefaults(t *testing.T) {
 				TTL:     3600,
 			},
 		},
+		{
+			name: "Preserve enabled",
+			zone: DNSZone{
+				Enabled:  true,
+				Preserve: true,
+			},
+			expected: DNSZone{
+				Enabled:  true,
+				Preserve: true,
+				TTL:      3600,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -54,6 +66,9 @@ func TestDNSZoneSetDefaults(t *testing.T) {
 
 			if zone.TTL != tt.expected.TTL {
 				t.Errorf("TTL = %d, expected %d", zone.TTL, tt.expected.TTL)
+			}
+			if zone.Preserve != tt.expected.Preserve {
+				t.Errorf("Preserve = %v, expected %v", zone.Preserve, tt.expected.Preserve)
 			}
 		})
 	}

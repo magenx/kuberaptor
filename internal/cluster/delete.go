@@ -223,24 +223,28 @@ func (d *Deleter) Run() error {
 
 	// Step 4: Delete DNS zone (if it was created)
 	if d.Config.DNSZone.Enabled && d.Config.Domain != "" {
-		util.LogInfo("Finding and deleting DNS zone", "dns")
-		zoneName := d.Config.Domain
-		if d.Config.DNSZone.Name != "" {
-			zoneName = d.Config.DNSZone.Name
-		}
-		zone, err := d.HetznerClient.GetZone(d.ctx, zoneName)
-		if err == nil && zone != nil {
-			// Check if zone is managed by this cluster
-			if zone.Labels["cluster"] == d.Config.ClusterName && zone.Labels["managed"] == "kuberaptor" {
-				if err := d.HetznerClient.DeleteZone(d.ctx, zone); err != nil {
-					errMsg := fmt.Sprintf("Failed to delete DNS zone: %v", err)
-					util.LogError(errMsg, "dns")
-					deletionErrors = append(deletionErrors, errMsg)
+		if d.Config.DNSZone.Preserve {
+			util.LogInfo("DNS zone has preserve enabled, skipping deletion", "dns")
+		} else {
+			util.LogInfo("Finding and deleting DNS zone", "dns")
+			zoneName := d.Config.Domain
+			if d.Config.DNSZone.Name != "" {
+				zoneName = d.Config.DNSZone.Name
+			}
+			zone, err := d.HetznerClient.GetZone(d.ctx, zoneName)
+			if err == nil && zone != nil {
+				// Check if zone is managed by this cluster
+				if zone.Labels["cluster"] == d.Config.ClusterName && zone.Labels["managed"] == "kuberaptor" {
+					if err := d.HetznerClient.DeleteZone(d.ctx, zone); err != nil {
+						errMsg := fmt.Sprintf("Failed to delete DNS zone: %v", err)
+						util.LogError(errMsg, "dns")
+						deletionErrors = append(deletionErrors, errMsg)
+					} else {
+						util.LogSuccess("DNS zone deleted", "dns")
+					}
 				} else {
-					util.LogSuccess("DNS zone deleted", "dns")
+					util.LogInfo("DNS zone exists but is not managed by this cluster, skipping deletion", "dns")
 				}
-			} else {
-				util.LogInfo("DNS zone exists but is not managed by this cluster, skipping deletion", "dns")
 			}
 		}
 	}
