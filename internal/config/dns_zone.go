@@ -7,8 +7,8 @@ package config
 // DNSZone represents DNS zone configuration for domain management
 type DNSZone struct {
 	Enabled  bool   `yaml:"enabled,omitempty"`
-	Name     string `yaml:"name,omitempty"`    // Optional override for zone name, defaults to domain
-	TTL      int    `yaml:"ttl,omitempty"`     // TTL for DNS records in seconds
+	Name     string `yaml:"name,omitempty"`     // Optional override for zone name, defaults to domain
+	TTL      int    `yaml:"ttl,omitempty"`      // TTL for DNS records in seconds
 	Preserve bool   `yaml:"preserve,omitempty"` // When true, the DNS zone is not deleted on cluster deletion and is reused when a new cluster with the same zone name is created
 }
 
