@@ -874,6 +874,35 @@ kuberaptor budget --config cluster.yaml
 
 ---
 
+## ⚖️ Features compared with other tools:
+
+|                      | Kuberaptor           | Hetzner-k3s                          | k3s or Managed Service         |
+| -------------------- | -------------------- | ------------------------------------ | ------------------------------ |
+| **Base**             |                      |                                      |                                |
+| Idempotence          | ✅ Available [default]  | ✅ Available [default]                  | ➖ Setup required                 |
+| Deployment           | ✅ 2-3 minutes          | ✅ 2-3 minutes                          | ➖ 30+ minutes                    |
+| Dependencies         | ✅ CLI tool only        | ➖ kubectl/helm required                | ➖ Account, Terraform, python     |
+| Data privacy         | ✅ Full control         | ✅ Full control                         | ➖ Third-party access             |
+| Credential exposure  | ✅ Local PC, Autoscaler | ➖ Local PC, Autoscaler, Nodes, Scripts | ➖ API tokens, third party access |
+| Learning curve       | ✅ Low                  | ✅ Low                                  | ➖ Medium-High                    |
+| Monthly cost         | ✅ Infrastructure only  | ✅ Infrastructure only                  | ➖ Platform fees                  |
+|                      |                      |                                      |                                |
+| **Features**         |                      |                                      |                                |
+| Private Networking   | ✅ Available [default]  | ✅ Available                       | ➖ Setup required                 |
+| NAT Gateway          | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| DNS Zone             | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| SSL Certificate      | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| Global Load Balancer | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| HTTPS Service Target | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| Labels               | ✅ Hetzner + Kubernetes | ➖ Kubernetes                           | ➖ Setup required                 |
+| True Hetzner GEO HA  | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
+| Placement Groups     | ✅ Available [default]  | ✅ Available                            | ➖ Setup required                 |
+|                      |                      |                                      |                                |
+| **Options**          |                      |                                      |                                |
+| Budget estimator     | ✅ Available [default]  | ➖ Not Available                        | ➖ Setup required                 |
+| Config generator     | ✅ Available [default]  | ➖ Not Available                        | ➖ Setup required                 |
+
+
 ## 🏆 Key Technical Features
 
 ### Performance
