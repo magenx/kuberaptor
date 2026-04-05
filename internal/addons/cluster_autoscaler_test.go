@@ -565,6 +565,73 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 	}
 }
 
+// TestSSHKeyEnvironmentVariable verifies that HCLOUD_SSH_KEY is set to the correct
+// SSH key name format ({clusterName}-ssh-key), matching the key created during cluster setup.
+func TestSSHKeyEnvironmentVariable(t *testing.T) {
+	clusterName := "test-cluster"
+	cfg := &config.Main{
+		ClusterName: clusterName,
+		K3sVersion:  "v1.32.0+k3s1",
+		Image:       "ubuntu-24.04",
+		Networking: config.Networking{
+			SSH: config.SSH{
+				Port: 22,
+			},
+		},
+		Addons: config.Addons{
+			ClusterAutoscaler: &config.ClusterAutoscaler{
+				Enabled:                    true,
+				ContainerImageTag:          "v1.34.2",
+				ScanInterval:               "10s",
+				ScaleDownDelayAfterAdd:     "10m",
+				ScaleDownDelayAfterDelete:  "10s",
+				ScaleDownDelayAfterFailure: "3m",
+				MaxNodeProvisionTime:       "15m",
+			},
+		},
+	}
+
+	phpName := "php"
+	pool := config.WorkerNodePool{
+		NodePool: config.NodePool{
+			Name:         &phpName,
+			InstanceType: "cpx32",
+			Autoscaling: &config.Autoscaling{
+				Enabled:      true,
+				MinInstances: 1,
+				MaxInstances: 3,
+			},
+		},
+		Locations: []string{"nbg1"},
+	}
+
+	installer := NewClusterAutoscalerInstaller(cfg, nil)
+	firstMaster := &hcloud.Server{Name: "test-master-1"}
+	masters := []*hcloud.Server{firstMaster}
+
+	env, err := installer.buildEnvironmentVariables(firstMaster, masters, []config.WorkerNodePool{pool}, "10.0.0.1", "token")
+	if err != nil {
+		t.Fatalf("Failed to build environment variables: %v", err)
+	}
+
+	var sshKeyValue string
+	for _, envVar := range env {
+		name, ok := envVar["name"].(string)
+		if !ok {
+			continue
+		}
+		if name == "HCLOUD_SSH_KEY" {
+			sshKeyValue, _ = envVar["value"].(string)
+			break
+		}
+	}
+
+	expectedSSHKey := clusterName + "-ssh-key"
+	if sshKeyValue != expectedSSHKey {
+		t.Errorf("HCLOUD_SSH_KEY = %q, expected %q", sshKeyValue, expectedSSHKey)
+	}
+}
+
 // stringPtr is a helper function to create string pointers for test data
 func stringPtr(s string) *string {
 	return &s

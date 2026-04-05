@@ -351,7 +351,7 @@ func (c *ClusterAutoscalerInstaller) buildEnvironmentVariables(firstMaster *hclo
 		},
 		{
 			"name":  "HCLOUD_SSH_KEY",
-			"value": c.Config.ClusterName,
+			"value": fmt.Sprintf("%s-ssh-key", c.Config.ClusterName),
 		},
 		{
 			"name":  "HCLOUD_NETWORK",
