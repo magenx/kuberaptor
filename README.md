@@ -10,10 +10,11 @@
 
 ## 🎉 Project Status: **WIP**
 ### An independent open source project, not affiliated with Hetzner Online GmbH.
-The Kuberaptor project is a Kubernetes cluster management tool written in Go, providing automated cluster creation, management, and operations on Hetzner Cloud infrastructure.
+The Kuberaptor project is a Kubernetes cluster management tool written in Go, providing automated cluster creation, management, and operations on Hetzner Cloud infrastructure.  
 
-**📚 [Website](https://www.kuberaptor.com/)**
-[Linkedin](https://www.linkedin.com/pulse/kuberaptor-production-ready-k3s-clusters-denis-z%25C3%25B5kov-903kf)
+📚 **[Documentation overview](https://deepwiki.com/magenx/kuberaptor)**  
+**[Website](https://www.kuberaptor.com/)**   
+**[Linkedin](https://www.linkedin.com/pulse/kuberaptor-production-ready-k3s-clusters-denis-z%25C3%25B5kov-903kf)**   
 
 ---
 
