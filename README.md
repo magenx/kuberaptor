@@ -298,7 +298,7 @@ kuberaptor config -g -o my-cluster.yaml
 
 This creates a fully documented YAML configuration file with sensible defaults that you can customize for your cluster.
 
-### 2. Create Cluster
+### 2. Create Cluster | Advaced full config
 
 **Configuration File (cluster.yaml):**
 
@@ -307,13 +307,20 @@ This creates a fully documented YAML configuration file with sensible defaults t
 hetzner_token: <your_hetzner_cloud_token_here>
 
 # Cluster Configuration
-cluster_name: mykubic
+# Configuration also supports YAML anchors
+
+cluster_name: &cluster_name mykubic # Cluster name with yaml anchor
 kubeconfig_path: ~/.kube/config
-k3s_version: v1.32.0+k3s1
-domain: example.com   # Optional: Required for DNS zone and SSL certificate
+k3s_version: v1.35.3+k3s1
+
+domain: &domain example.com   # Optional: Required for DNS zone and SSL certificate (&domain yaml anchor)
+locations: &locations         # Optional: &locations yaml anchor
+  - nbg1
+
+image: &image debian-13       # Optional: node OS image with &image yaml anchor
+autoscaling_image: *image     # Optional: autoscaler node OS image with *image yaml anchor
 
 # Advanced Cluster Settings (Optional)
-api_server_hostname: api.example.com              # Custom API server hostname
 schedule_workloads_on_masters: false              # Allow workloads on master nodes (default: false)
 include_instance_type_in_instance_name: false     # Include instance type in names (default: false)
 protect_against_deletion: true                    # Prevent accidental deletion (default: true)
@@ -321,40 +328,91 @@ k3s_upgrade_concurrency: 1                        # Number of nodes to upgrade i
 grow_root_partition_automatically: true           # Auto-grow root partition (default: true)
 
 # API Load Balancer Configuration (Optional)
+api_server_hostname: api.example.com              # Custom API server hostname
 api_load_balancer:
-  enabled: true                   # Create load balancer for Kubernetes API (default: false)
-  hetzner:                        # Hetzner Cloud metadata labels (optional)
+  enabled: true                                   # Create load balancer for Kubernetes API (default: false)
+  hetzner:                                        # Extra Hetzner Cloud metadata labels (optional) Default cluster labels always applied
     labels:
       - key: cluster_id
         value: "123456"
       - key: environment
         value: production
 
+datastore:
+  mode: "etcd"
+  embedded_etcd:
+    snapshot_retention: 24
+    snapshot_schedule_cron: "0 * * * *"
+    s3_enabled: true
+    s3_endpoint: "nbg1.your-objectstorage.com"
+    s3_region: nbg1
+    s3_bucket: *cluster_name                     # S3 bucket name as cluster name yaml anchor
+    s3_folder: "etcd-snapshot"
+    s3_access_key: "xxx"                         # your hetzner s3 storage keys
+    s3_secret_key: "xxx"                         # your hetzner s3 storage keys
+
 # Networking Configuration
 networking:
   # CNI Configuration (Optional - defaults to Flannel)
   cni:
-    enabled: false             # Set to true to use custom CNI (default: false, uses Flannel)
-    mode: flannel              # Options: flannel, cilium
-    cilium:                    # Cilium-specific configuration
-      enabled: true            # Enable Cilium CNI
-      version: "1.17.2"        # Cilium version
-      encryption_type: wireguard  # Options: wireguard, ipsec
-      routing_mode: tunnel     # Options: tunnel, native
-      tunnel_protocol: vxlan   # Options: vxlan, geneve
-      hubble_enabled: true     # Enable Hubble observability
+    enabled: false                      # Set to true to use custom CNI (default: false, uses Flannel)
+    mode: flannel                       # Options: flannel, cilium
+    cilium:                             # Cilium-specific configuration
+      enabled: true                     # Enable Cilium CNI
+      version: "v1.19.2"                # Cilium version
+      encryption_type: wireguard        # Options: wireguard, ipsec
+      routing_mode: tunnel              # Options: tunnel, native
+      tunnel_protocol: vxlan            # Options: vxlan, geneve
+      hubble_enabled: true              # Enable Hubble observability
       hubble_relay_enabled: true
       hubble_ui_enabled: true
-  
+      k8s_service_host: 127.0.0.1
+      k8s_service_port: 6444
+      operator_replicas: 1
+      operator_memory_request: 128Mi
+      agent_memory_request: 512Mi
+      egress_gateway_enabled: false
+      hubble_metrics:
+        - dns
+        - drop
+        - tcp
+        - flow
+        - port-distribution
+        - icmp
+        - http
+
+  # SSH key configuration (ssh-keygen -t ed25519 -C "my kubernetes cluster")
   ssh:
-    public_key_path: ~/.ssh/id_rsa.pub
-    private_key_path: ~/.ssh/id_rsa
     port: 22
-  
+    use_agent: false
+    public_key_path: ~/.ssh/id_ed25519.pub
+    private_key_path: ~/.ssh/id_ed25519
+
   # Private network for cluster nodes
   private_network:
     enabled: true
     subnet: 10.0.0.0/16
+    existing_network_name: ""
+    # NAT Gateway for private cluster configuration (bastion | jump host)
+    nat_gateway:
+      enabled: true
+      instance_type: "cx23"
+      locations: *locations           # Could use yaml anchor *locations
+      # Additional custom hetzner labels can be used with all resources
+      # Default cluster labels always applied
+      hetzner:                        # Hetzner Cloud metadata labels (optional)
+        labels:
+          - key: cluster_id
+            value: "123456"
+          - key: environment
+            value: production
+
+  # Public network disabled
+  public_network:
+    ipv4:
+      enabled: false
+    ipv6:
+      enabled: false
   
   # Access control lists
   allowed_networks:
@@ -365,46 +423,113 @@ networking:
       - 0.0.0.0/0          # Public API access
 
 # Master Nodes Configuration
+# Example true x3 GEO replicated masters pool
 masters_pool:
-  instance_type: cx32      # 8 vCPU, 16GB RAM
+  instance_type: cpx22     # 2 vCPU, 4GB RAM, 80 GB SSD
   instance_count: 3        # HA configuration
-  locations:
+  locations:               # Could use yaml anchor *locations
+    - fsn1                 # x1 Falkenstein
+    - hel1                 # x1 Helsinki
+    - nbg1                 # x1 Nuremberg
+
+# Example x3 masters but same DC replicated pool
+# Using placement groups for hardware separation | runs on a different physical host
+masters_pool:
+  instance_type: cpx22     # 2 vCPU, 4GB RAM, 80 GB SSD
+  instance_count: 3        # HA configuration with placement groups
+  locations:               # Could use yaml anchor *locations
     - fsn1                 # Falkenstein
-    - hel1                 # Helsinki
-    - nbg1                 # Nuremberg
+  placement_group:         # Use placement groups for single DC multiple nodes physical host separation
+      name: master
+      type: spread
+      labels:
+        - key: group
+          value: master
+        - key: ha
+          value: "true"
 
 # Worker Nodes Configuration
-worker_node_pools:
-  - name: workers
-    instance_type: cx42    # 16 vCPU, 32GB RAM
-    instance_count: 6      # Distributed across locations
-    locations:             # Multi-location support (NEW)
-      - fsn1               # 2 nodes in Falkenstein
-      - hel1               # 2 nodes in Helsinki  
-      - nbg1               # 2 nodes in Nuremberg
-    # legacy single location also supported: location: fsn1
+# Example true x3 GEO replicated pool
+# worker_node_pools:
+#   - name: workers
+#     instance_type: cx42    # 16 vCPU, 32GB RAM
+#     instance_count: 6      # Distributed across locations
+#     locations:             # Multi-location support (NEW) | Could use yaml anchor *locations
+#       - fsn1               # x2 nodes in Falkenstein
+#       - hel1               # x2 nodes in Helsinki  
+#       - nbg1               # x2 nodes in Nuremberg
+
+# Simple worker pools
+- name: varnish
+  instance_type: cpx22
+  instance_count: 3
+  locations: *locations
+  # Additional custom Hetzner metadata labels can be used with all resources
+  # Default Hetzner metadata cluster labels always applied
+  hetzner:
     labels:
-      - "role=worker"
-      - "environment=developer"
-    taints: []
+      - key: cluster_id
+        value: "123456"
+      - key: environment
+        value: production
+  # Additional custom Kubernetes labels can be used with all resources
+  # Default Kubernetes cluster labels always applied
+  kubernetes:
+      labels:
+        - key: []
+          value: []
+      taints:
+        - key: []
+          value: []
+          effect: NoSchedule
+ 
+- name: nginx
+  instance_type: cpx22
+  instance_count: 3
+  locations: *locations
+
+- name: php
+  instance_type: cpx22
+  locations: *locations
+  autoscaling:                       # Cluster Autoscaler enabled configuration
+    enabled: true
+    min_instances: 1
+    max_instances: 3
 
 # Global Load Balancer (Optional)
+# Simplify web traffic routing to internal node pool
+# SSL termination
 load_balancer:
+  name: *cluster_name
   enabled: true
-  type: lb11               # Smallest load balancer type
-  location: fsn1
+  target_pools: ["varnish"]          # Internal varnish node pool label
+  use_private_ip: true
+  attach_to_network: true
+  type: "lb11"
+  locations: *locations
+  algorithm:
+    type: "round_robin"
   services:
-    - protocol: https      # HTTPS service (requires SSL certificate)
+    - protocol: "https"              # Create HTTPS service configuration with DNS Zone and SSL certificate below required
       listen_port: 443
       destination_port: 80
-    - protocol: tcp        # HTTP service
-      listen_port: 80
-      destination_port: 80
+      proxyprotocol: false
+      health_check:
+        protocol: "http"
+        port: 80
+        interval: 15
+        timeout: 10
+        retries: 3
+        http:
+          domain: *domain
+          path: "/health_check.php"
+          status_codes: ["2??", "3??"]
+          tls: false
 
 # DNS Zone Management (Optional, required for SSL certificate)
 dns_zone:
   enabled: true
-  name: example.com        # Will use domain if not specified
+  name: example.com        # Will use domain if not specified | use yaml anchor
   ttl: 3600                # DNS TTL in seconds
 
 # SSL Certificate (Optional, requires DNS zone)
@@ -416,6 +541,57 @@ ssl_certificate:
   # Creates certificate for example.com and *.example.com
   # Certificate is automatically validated via DNS and attached to HTTPS services
   # Setting preserve:true reuses existing certificates instead of requesting new ones
+
+# Addons installation required for cluster functionality
+addons:
+  metrics_server:
+    enabled: true
+  csi_driver:
+    enabled: true
+    manifest_url: "https://raw.githubusercontent.com/hetznercloud/csi-driver/v2.20.0/deploy/kubernetes/hcloud-csi.yml"
+  cluster_autoscaler:
+    enabled: true
+    manifest_url: "https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/hetzner/examples/cluster-autoscaler-run-on-master.yaml"
+    container_image_tag: "v1.35.0"
+    scan_interval: "10s"                        
+    scale_down_delay_after_add: "10m"
+    scale_down_delay_after_delete: "10s"
+    scale_down_delay_after_failure: "3m"
+    max_node_provision_time: "5m"
+  cloud_controller_manager:
+    enabled: true
+    manifest_url: "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.30.1/ccm-networks.yaml"
+  system_upgrade_controller:
+    enabled: true
+    deployment_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.19.0/system-upgrade-controller.yaml"
+    crd_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.19.0/crd.yaml"
+  embedded_registry_mirror:
+    enabled: true
+
+# Custom commands to configure private networking via NAT Gateway
+# Configuration before k3s setup
+additional_pre_k3s_commands:
+  - apt autoremove -y hc-utils
+  - apt purge -y hc-utils
+  - echo "auto enp7s0" > /etc/network/interfaces
+  - echo "iface enp7s0 inet dhcp" >> /etc/network/interfaces
+  - echo "    post-up ip route add default via 10.0.0.1"  >> /etc/network/interfaces
+  - echo "[Resolve]" > /etc/systemd/resolved.conf
+  - echo "DNS=185.12.64.2 185.12.64.1" >> /etc/systemd/resolved.conf
+  - ifdown enp7s0 2>/dev/null || true
+  - ifup enp7s0 2>/dev/null || true
+  - systemctl enable --now resolvconf
+  - echo "nameserver 185.12.64.2" >> /etc/resolvconf/resolv.conf.d/head
+  - echo "nameserver 185.12.64.1" >> /etc/resolvconf/resolv.conf.d/head
+  - resolvconf --enable-updates
+  - resolvconf -u
+
+# Custom commands to install additional packages
+# Configuration after k3s setup
+additional_post_k3s_commands:
+  - apt autoremove -y
+  - apt update
+  - apt install -y syslog-ng ufw
 
 ```
 
