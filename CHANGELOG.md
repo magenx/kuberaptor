@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1-rc.3](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.2...v1.0.1-rc.3) (2026-04-05)
+
+
+### 📝 Documentation
+
+* **readme:** Add features comparison table to README ([#99](https://github.com/magenx/kuberaptor/issues/99)) ([85c788a](https://github.com/magenx/kuberaptor/commit/85c788ae1e582312bf4988a48fba9de9050cde26))
+
+
+### 🚦 Maintenance
+
+* Add copyright notice for 2023 Vito Botta ([#100](https://github.com/magenx/kuberaptor/issues/100)) ([4f139df](https://github.com/magenx/kuberaptor/commit/4f139df42a5c4557d6fafa05b692ba4de9c74b4e))
+* **readme:** Revise README with new documentation and formatting ([#98](https://github.com/magenx/kuberaptor/issues/98)) ([06b6a76](https://github.com/magenx/kuberaptor/commit/06b6a7605118fb8efe1555ae4bce5804fc249e0a))
+
 ## [1.0.1-rc.2](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.1...v1.0.1-rc.2) (2026-04-05)
 
 
