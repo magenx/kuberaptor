@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.1-rc.2](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.1...v1.0.1-rc.2) (2026-04-05)
+
+
+### 🐛 Bug Fixes
+
+* Add `preserve` option to DNS zone to prevent deletion on cluster teardown ([#96](https://github.com/magenx/kuberaptor/issues/96)) ([2f153ad](https://github.com/magenx/kuberaptor/commit/2f153ad2cbcafd887b3eda72cf4f0579fc637f01))
+* Pass correct SSH key name to cluster autoscaler ([#94](https://github.com/magenx/kuberaptor/issues/94)) ([ed4e4e0](https://github.com/magenx/kuberaptor/commit/ed4e4e0daf853a0d9f232ae0c82e54d3be95e286))
+
+
+### 📝 Documentation
+
+* **readme:** Add DNS preconfiguration for certificate validation ([#92](https://github.com/magenx/kuberaptor/issues/92)) ([b067668](https://github.com/magenx/kuberaptor/commit/b067668ca52ade46795fb1438d4d621d8084ba36))
+* **readme:** Enhance cluster configuration documentation ([#91](https://github.com/magenx/kuberaptor/issues/91)) ([fe9bb7d](https://github.com/magenx/kuberaptor/commit/fe9bb7d7d63149e8a149ee1515d9fccef3e30b66))
+* **readme:** Replace external image links with local screenshots ([#90](https://github.com/magenx/kuberaptor/issues/90)) ([852667a](https://github.com/magenx/kuberaptor/commit/852667a1a83a9e96cdfba62efd61311ffe507533))
+* **readme:** Update live site URL in README.md ([#87](https://github.com/magenx/kuberaptor/issues/87)) ([b76a387](https://github.com/magenx/kuberaptor/commit/b76a387ec5a209e96e0ed4bb36673a6807fe4a82))
+
+
+### 🚦 Maintenance
+
+* Create README.md ([#88](https://github.com/magenx/kuberaptor/issues/88)) ([04b7f38](https://github.com/magenx/kuberaptor/commit/04b7f38b02ffd494bf8301171e992e2c239ea369))
+* Kuberaptor cli images ([#89](https://github.com/magenx/kuberaptor/issues/89)) ([864a63b](https://github.com/magenx/kuberaptor/commit/864a63bab02328d01e24062f923fae8fd3ab4d64))
+
 ## [1.0.1-rc.1](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc...v1.0.1-rc.1) (2026-04-04)
 
 
