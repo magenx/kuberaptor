@@ -126,13 +126,13 @@ func (t *ToolInstaller) InstallKubectl() error {
 
 	// Download kubectl binary
 	kubectlURL := fmt.Sprintf("https://dl.k8s.io/release/%s/bin/%s/%s/kubectl", t.kubectlVersion, osName, arch)
-	if err := t.runCommand("curl", "-LO", kubectlURL); err != nil {
+	if err := t.runCommand("curl", "-fsSLO", kubectlURL); err != nil {
 		return fmt.Errorf("failed to download kubectl: %w", err)
 	}
 
 	// Download checksum
 	checksumURL := fmt.Sprintf("https://dl.k8s.io/release/%s/bin/%s/%s/kubectl.sha256", t.kubectlVersion, osName, arch)
-	if err := t.runCommand("curl", "-LO", checksumURL); err != nil {
+	if err := t.runCommand("curl", "-fsSLO", checksumURL); err != nil {
 		return fmt.Errorf("failed to download kubectl checksum: %w", err)
 	}
 
@@ -269,7 +269,7 @@ func (t *ToolInstaller) InstallCilium() error {
 	} else {
 		// Fetch stable version from GitHub
 		versionURL := "https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt"
-		cmd := exec.Command("curl", "-s", versionURL)
+		cmd := exec.Command("curl", "-fsS", versionURL)
 		output, err := cmd.Output()
 		if err != nil {
 			return fmt.Errorf("failed to fetch cilium CLI version: %w", err)
@@ -285,7 +285,7 @@ func (t *ToolInstaller) InstallCilium() error {
 	baseURL := fmt.Sprintf("https://github.com/cilium/cilium-cli/releases/download/%s", ciliumVersion)
 
 	// Download tarball
-	if err := t.runCommand("curl", "-L", "--fail", "--remote-name-all",
+	if err := t.runCommand("curl", "-fsLO",
 		fmt.Sprintf("%s/%s", baseURL, tarballName),
 		fmt.Sprintf("%s/%s", baseURL, checksumName)); err != nil {
 		return fmt.Errorf("failed to download cilium CLI: %w", err)
@@ -303,7 +303,7 @@ func (t *ToolInstaller) InstallCilium() error {
 	}
 
 	// Extract and install
-	if err := t.runCommand("sudo", "tar", "xzvf", tarballName, "-C", "/usr/local/bin"); err != nil {
+	if err := t.runCommand("sudo", "tar", "xzf", tarballName, "-C", "/usr/local/bin"); err != nil {
 		os.Remove(tarballName)
 		os.Remove(checksumName)
 		return fmt.Errorf("failed to extract cilium CLI: %w", err)
