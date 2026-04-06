@@ -3,8 +3,8 @@
 ## Project Overview
 Kuberaptor is a Kubernetes cluster management tool written in Go that automates cluster creation, management, and operations on Hetzner Cloud infrastructure. This project uses K3s (lightweight Kubernetes) and provides CLI commands for cluster lifecycle management.
 
-**Project Type:** Go CLI application with embedded web marketing site (React/TypeScript)
-**Go Version:** 1.24.0+ (toolchain 1.24.11)
+**Project Type:** Go CLI application
+**Go Version:** 1.26.0+
 **Primary Language:** Go
 **Architecture:** Modular design with clear separation between CLI, business logic, and infrastructure
 
@@ -14,9 +14,9 @@ Kuberaptor is a Kubernetes cluster management tool written in Go that automates 
 kuberaptor/
 ├── cmd/kuberaptor/              # CLI application entry point
 │   ├── main.go                # Application initialization
-│   └── commands/              # Cobra CLI commands (create, delete, upgrade, run, releases)
+│   └── commands/              # Cobra CLI commands (create, delete, upgrade, run, releases, budget, completion, config, version)
 ├── internal/                  # Private application code
-│   ├── cluster/               # Core cluster operations (create, delete, upgrade, run)
+│   ├── cluster/               # Core cluster operations (create, delete, upgrade, run, budget)
 │   ├── config/                # Configuration management (YAML-based)
 │   ├── cloudinit/             # Cloud-init template generation
 │   ├── addons/                # Kubernetes addon management
@@ -24,16 +24,12 @@ kuberaptor/
 ├── pkg/                       # Public reusable libraries
 │   ├── hetzner/               # Hetzner Cloud API wrapper
 │   ├── k3s/                   # K3s operations
-│   └── templates/             # Template rendering
-├── page/                      # React website (IGNORE THIS FOLDER)
+│   ├── templates/             # Template rendering
+│   └── version/               # Version information
 ├── Makefile                   # Build automation
 ├── go.mod                     # Go module dependencies
 └── README.md                  # Comprehensive documentation
 ```
-
-## Folders to Ignore
-
-**IMPORTANT:** Ignore the `page/` directory - it contains the marketing website built with React, Vite, and TypeScript. Focus only on Go code in `cmd/`, `internal/`, and `pkg/` directories.
 
 ## Building the Project
 
@@ -143,9 +139,9 @@ func NewCreatorEnhanced(cfg *config.Main, hetznerClient *hetzner.Client) (*Creat
 ## Dependencies
 
 ### Core Dependencies
-- `github.com/hetznercloud/hcloud-go/v2` v2.34.0 - Official Hetzner Cloud SDK
+- `github.com/hetznercloud/hcloud-go/v2` v2.37.0 - Official Hetzner Cloud SDK
 - `github.com/spf13/cobra` v1.10.2 - CLI framework
-- `golang.org/x/crypto` v0.47.0 - SSH client implementation
+- `golang.org/x/crypto` v0.49.0 - SSH client implementation
 - `gopkg.in/yaml.v3` v3.0.1 - YAML parsing
 
 ### Dependency Management
@@ -165,20 +161,27 @@ func NewCreatorEnhanced(cfg *config.Main, hetznerClient *hetzner.Client) (*Creat
 
 ### CI/CD Pipeline
 - **Go Format:** Automatic formatting on PRs (`go_format.yml`)
-- **PR Title Validation:** Enforces conventional commit format
-- **Build for Release:** Multi-platform builds
-- **Deploy Pages:** Automatic deployment of website (ignore this)
+- **PR Title Validation:** Enforces conventional commit format (`pr_title_validate.yml`)
+- **CodeQL Security Scan:** Automated security analysis (`codeql-security-scan.yml`)
+- **Build for Release:** Multi-platform builds (`build_for_release.yml`)
+- **Release:** Automated release workflow (`release.yml`)
 
 ### Manual Testing Commands
 ```bash
 # Build and test create command
-./dist/kuberaptor create --config test-cluster.yaml --dry-run
+./dist/kuberaptor create --config test-cluster.yaml
 
 # Test run command
 ./dist/kuberaptor run --config test-cluster.yaml --command "uptime"
 
 # List K3s releases
 ./dist/kuberaptor releases
+
+# Check cluster budget estimate
+./dist/kuberaptor budget --config test-cluster.yaml
+
+# Generate a sample config
+./dist/kuberaptor config --generate
 ```
 
 ## Common Operations
@@ -243,7 +246,7 @@ GOOS=linux GOARCH=amd64 make build
 
 ## When Writing Code
 
-1. **Focus on Go code** - ignore the `page/` directory entirely
+1. **Focus on Go code** - all application logic lives in `cmd/`, `internal/`, and `pkg/` directories
 2. **Maintain modularity** - respect package boundaries
 3. **Add error context** - use `fmt.Errorf` with `%w` for wrapping
 4. **Test concurrent code** - race detector is enabled
