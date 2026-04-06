@@ -7,7 +7,6 @@ package config
 // NodePool represents common node pool configuration
 type NodePool struct {
 	Name                           *string               `yaml:"name,omitempty"`
-	LegacyInstanceType             string                `yaml:"legacy_instance_type,omitempty"`
 	InstanceType                   string                `yaml:"instance_type"`
 	Image                          interface{}           `yaml:"image,omitempty"` // Can be string or int64
 	InstanceCount                  int                   `yaml:"instance_count,omitempty"`

@@ -86,10 +86,6 @@ func (g *Generator) Generate() (string, error) {
 	}
 
 	data := map[string]interface{}{
-		"growpart_str":             "",
-		"growroot_disabled_file":   "",
-		"eth1_str":                 "",
-		"firewall_files":           "",
 		"ssh_files":                sshFiles,
 		"init_files":               initFiles,
 		"packages_str":             packagesStr,
