@@ -1,14 +1,31 @@
 #!/bin/bash
-if systemctl is-active ssh.socket > /dev/null 2>&1
+
+# Disable ssh socket for config consistency
+if systemctl is-enabled ssh.socket > /dev/null 2>&1
 then
-  # OpenSSH is using socket activation
-  systemctl disable ssh
-  systemctl daemon-reload
-  systemctl restart ssh.socket
-  systemctl stop ssh
-else
-  # OpenSSH is not using socket activation
-  sed -i 's/^#*Port .*/Port {{ .ssh_port }}/' /etc/ssh/sshd_config
+  systemctl disable --now ssh.socket
+  systemctl enable --now ssh.service
 fi
 
-systemctl restart ssh
+# Update ssh port from config
+cat > /etc/ssh/sshd_config.d/20-kuberaptor-custom-port.conf << EOF
+Port {{ .ssh_port }}
+EOF
+
+# SSH optimization and security overrides
+cat > /etc/ssh/sshd_config.d/10-kuberaptor-security.conf << EOF
+LoginGraceTime 30
+MaxAuthTries 3
+X11Forwarding no
+PrintLastLog no
+UseDNS no
+PrintMotd no
+TCPKeepAlive yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+ClientAliveInterval 120
+ClientAliveCountMax 2
+EOF
+
+systemctl restart sshd
