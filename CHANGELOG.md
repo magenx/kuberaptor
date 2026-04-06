@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1-rc.5](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.4...v1.0.1-rc.5) (2026-04-06)
+
+
+### 🛠️ Refactoring
+
+* Update curl options for downloading tools ([#105](https://github.com/magenx/kuberaptor/issues/105)) ([33e0fb3](https://github.com/magenx/kuberaptor/commit/33e0fb3320d12dd4b5f464df9f358f1e19aa4f35))
+
 ## [1.0.1-rc.4](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.3...v1.0.1-rc.4) (2026-04-06)
 
 
