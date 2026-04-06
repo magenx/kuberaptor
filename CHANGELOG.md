@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1-rc.6](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.5...v1.0.1-rc.6) (2026-04-06)
+
+
+### 🛠️ Refactoring
+
+* Remove dead code - unused structs, empty vars, config field ([65b13ae](https://github.com/magenx/kuberaptor/commit/65b13aedcedcfe556aebb7116d1c0ec980752a6f))
+
 ## [1.0.1-rc.5](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.4...v1.0.1-rc.5) (2026-04-06)
 
 
