@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.1-rc.4](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.3...v1.0.1-rc.4) (2026-04-06)
+
+
+### 🐛 Bug Fixes
+
+* update copilot instructions to match current codebase state ([f293a2a](https://github.com/magenx/kuberaptor/commit/f293a2a51e957fdd3e5d2aa0f1c4b658888d0bd8))
+
+
+### 🛠️ Refactoring
+
+* Refactor SSH configuration and service management ([#103](https://github.com/magenx/kuberaptor/issues/103)) ([56968f2](https://github.com/magenx/kuberaptor/commit/56968f20f3b59a237f4d803cf722a50bca4c9c76))
+
+
+### 📝 Documentation
+
+* **copilot:** Sync copilot instructions with current codebase state ([#102](https://github.com/magenx/kuberaptor/issues/102)) ([f293a2a](https://github.com/magenx/kuberaptor/commit/f293a2a51e957fdd3e5d2aa0f1c4b658888d0bd8))
+
 ## [1.0.1-rc.3](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.2...v1.0.1-rc.3) (2026-04-05)
 
 
