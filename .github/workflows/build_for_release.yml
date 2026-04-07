@@ -121,15 +121,15 @@ jobs:
         with:
           path: artifact
 
-      - name: Append release bodyand upload all assets
+      - name: Append release body and upload all assets
         uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           token: ${{ secrets.KUBERAPTOR_TOKEN }}
           tag_name: ${{ inputs.tag_name }}
-          with:
           files: artifact/**
           draft: true
           prerelease: ${{ inputs.prerelease }}
+          overwrite_files: true
           append_body: true
           body: |
             <details>
