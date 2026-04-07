@@ -285,7 +285,7 @@ func (t *ToolInstaller) InstallCilium() error {
 	baseURL := fmt.Sprintf("https://github.com/cilium/cilium-cli/releases/download/%s", ciliumVersion)
 
 	// Download tarball
-	if err := t.runCommand("curl", "-fsLO",
+	if err := t.runCommand("curl", "-fsSL", "--remote-name-all",
 		fmt.Sprintf("%s/%s", baseURL, tarballName),
 		fmt.Sprintf("%s/%s", baseURL, checksumName)); err != nil {
 		return fmt.Errorf("failed to download cilium CLI: %w", err)
