@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1-rc.7](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.6...v1.0.1-rc.7) (2026-04-07)
+
+
+### 🐛 Bug Fixes
+
+* Update curl command options for downloading tarball ([#109](https://github.com/magenx/kuberaptor/issues/109)) ([fc689f4](https://github.com/magenx/kuberaptor/commit/fc689f41b20416c3d91058dad4ef15de99feec19))
+
+
+### 🚦 Maintenance
+
+* **workflow:** Enhance build workflow with checksum generation ([#108](https://github.com/magenx/kuberaptor/issues/108)) ([55b6cba](https://github.com/magenx/kuberaptor/commit/55b6cbacaa0f888d802d4852804950a2584df34f))
+
 ## [1.0.1-rc.6](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.5...v1.0.1-rc.6) (2026-04-06)
 
 
