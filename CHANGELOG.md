@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.0-rc.7](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.7...v1.1.0-rc.7) (2026-04-08)
+
+
+### 🚀 Features
+
+* Add Flux CLI tool and --skip-tools flag to create command ([#118](https://github.com/magenx/kuberaptor/issues/118)) ([3893060](https://github.com/magenx/kuberaptor/commit/3893060ea44afaee692bea08f8faa0fb4b5aed4d))
+* Add Kured (Kubernetes Reboot Daemon) addon ([#119](https://github.com/magenx/kuberaptor/issues/119)) ([09e7a5c](https://github.com/magenx/kuberaptor/commit/09e7a5c2becba4b5dd650b172e4276339edc10e6))
+* Apply Hetzner delete protection to servers, load balancers, and networks ([#115](https://github.com/magenx/kuberaptor/issues/115)) ([03ea26f](https://github.com/magenx/kuberaptor/commit/03ea26f49faf48b3fbe1d77b9636412194de83c5))
+
+
+### 🛠️ Refactoring
+
+* Tools installation with brew (macOS) and winget (Windows) ([#114](https://github.com/magenx/kuberaptor/issues/114)) ([2f00162](https://github.com/magenx/kuberaptor/commit/2f001623932eccef39e61c106c00464616128643))
+
+
+### 🚦 Maintenance
+
+* Update go fmt command to include './' prefix ([#120](https://github.com/magenx/kuberaptor/issues/120)) ([9d1d77d](https://github.com/magenx/kuberaptor/commit/9d1d77d74830997961bfb3f7a8fa35afd4f25305))
+* **workflow:** Fix typo in release body upload step ([#111](https://github.com/magenx/kuberaptor/issues/111)) ([e3ed36e](https://github.com/magenx/kuberaptor/commit/e3ed36edde292001928c2ee7492ecc9a2155d95b))
+
 ## [1.0.1-rc.7](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.6...v1.0.1-rc.7) (2026-04-07)
 
 
