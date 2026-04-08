@@ -734,6 +734,42 @@ func (c *Client) ListPlacementGroups(ctx context.Context, opts hcloud.PlacementG
 	return pgs, nil
 }
 
+// ChangeServerProtection changes the protection level of a server.
+// When delete is true, the server is protected from deletion.
+func (c *Client) ChangeServerProtection(ctx context.Context, server *hcloud.Server, delete bool) error {
+	action, _, err := c.hcloud.Server.ChangeProtection(ctx, server, hcloud.ServerChangeProtectionOpts{
+		Delete: hcloud.Ptr(delete),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to change protection for server %s: %w", server.Name, err)
+	}
+	return c.waitForAction(ctx, action)
+}
+
+// ChangeLoadBalancerProtection changes the protection level of a load balancer.
+// When delete is true, the load balancer is protected from deletion.
+func (c *Client) ChangeLoadBalancerProtection(ctx context.Context, lb *hcloud.LoadBalancer, delete bool) error {
+	action, _, err := c.hcloud.LoadBalancer.ChangeProtection(ctx, lb, hcloud.LoadBalancerChangeProtectionOpts{
+		Delete: hcloud.Ptr(delete),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to change protection for load balancer %s: %w", lb.Name, err)
+	}
+	return c.waitForAction(ctx, action)
+}
+
+// ChangeNetworkProtection changes the protection level of a network.
+// When delete is true, the network is protected from deletion.
+func (c *Client) ChangeNetworkProtection(ctx context.Context, network *hcloud.Network, delete bool) error {
+	action, _, err := c.hcloud.Network.ChangeProtection(ctx, network, hcloud.NetworkChangeProtectionOpts{
+		Delete: hcloud.Ptr(delete),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to change protection for network %s: %w", network.Name, err)
+	}
+	return c.waitForAction(ctx, action)
+}
+
 // DeletePlacementGroup deletes a placement group
 func (c *Client) DeletePlacementGroup(ctx context.Context, pg *hcloud.PlacementGroup) error {
 	_, err := c.hcloud.PlacementGroup.Delete(ctx, pg)

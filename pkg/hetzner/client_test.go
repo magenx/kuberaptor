@@ -5,8 +5,10 @@
 package hetzner
 
 import (
+	"context"
 	"testing"
 
+	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"github.com/magenx/kuberaptor/pkg/version"
 )
 
@@ -49,5 +51,53 @@ func TestNewClient_WithEmptyToken(t *testing.T) {
 
 	if client.token != "" {
 		t.Errorf("expected empty token, got '%s'", client.token)
+	}
+}
+
+func TestChangeServerProtection_InvalidToken(t *testing.T) {
+	client := NewClient("invalid-token")
+	ctx := context.Background()
+
+	server := &hcloud.Server{
+		ID:   12345,
+		Name: "test-server",
+	}
+
+	// Calling with an invalid token should return an error from the Hetzner API
+	err := client.ChangeServerProtection(ctx, server, true)
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
+	}
+}
+
+func TestChangeLoadBalancerProtection_InvalidToken(t *testing.T) {
+	client := NewClient("invalid-token")
+	ctx := context.Background()
+
+	lb := &hcloud.LoadBalancer{
+		ID:   12345,
+		Name: "test-lb",
+	}
+
+	// Calling with an invalid token should return an error from the Hetzner API
+	err := client.ChangeLoadBalancerProtection(ctx, lb, true)
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
+	}
+}
+
+func TestChangeNetworkProtection_InvalidToken(t *testing.T) {
+	client := NewClient("invalid-token")
+	ctx := context.Background()
+
+	network := &hcloud.Network{
+		ID:   12345,
+		Name: "test-network",
+	}
+
+	// Calling with an invalid token should return an error from the Hetzner API
+	err := client.ChangeNetworkProtection(ctx, network, true)
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
 	}
 }
