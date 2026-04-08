@@ -103,6 +103,13 @@ func (n *NetworkResourceManager) createAPILoadBalancerForLocation(masterServers 
 
 	util.LogSuccess(fmt.Sprintf("API load balancer created in %s: %s (IP: %s)", location, lbName, lb.PublicNet.IPv4.IP.String()), "load balancer")
 
+	// Apply deletion protection if configured
+	if n.Config.ProtectAgainstDeletion {
+		if err := n.HetznerClient.ChangeLoadBalancerProtection(n.ctx, lb, true); err != nil {
+			return nil, fmt.Errorf("failed to enable protection for API load balancer %s: %w", lbName, err)
+		}
+	}
+
 	// Default retry configuration for network attachment verification
 	const (
 		maxNetworkAttachmentRetries = 5
@@ -389,14 +396,21 @@ func (n *NetworkResourceManager) createGlobalLoadBalancerForLocation(network *hc
 		return nil, fmt.Errorf("failed to create load balancer: %w", err)
 	}
 
+	util.LogSuccess(fmt.Sprintf("Global load balancer created in %s: %s (IP: %s)", location, lbName, lb.PublicNet.IPv4.IP.String()), "load balancer")
+
+	// Apply deletion protection if configured
+	if n.Config.ProtectAgainstDeletion {
+		if err := n.HetznerClient.ChangeLoadBalancerProtection(n.ctx, lb, true); err != nil {
+			return nil, fmt.Errorf("failed to enable protection for load balancer %s: %w", lbName, err)
+		}
+	}
+
 	// Default retry configuration for network attachment verification
 	const (
 		maxNetworkAttachmentRetries = 5
 		initialRetryDelay           = 2 * time.Second
 		stabilizationDelay          = 5 * time.Second
 	)
-
-	util.LogSuccess(fmt.Sprintf("Global load balancer created in %s: %s (IP: %s)", location, lbName, lb.PublicNet.IPv4.IP.String()), "load balancer")
 
 	// If load balancer was created with a network attachment, refresh its data
 	if shouldAttachToNetwork {

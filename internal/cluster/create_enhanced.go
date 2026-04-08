@@ -400,7 +400,7 @@ func (c *CreatorEnhanced) createNetwork() (*hcloud.Network, error) {
 	}
 
 	// Create network
-	return c.HetznerClient.CreateNetwork(c.ctx, hcloud.NetworkCreateOpts{
+	network, err := c.HetznerClient.CreateNetwork(c.ctx, hcloud.NetworkCreateOpts{
 		Name:    networkName,
 		IPRange: (*net.IPNet)(ipNet),
 		Subnets: []hcloud.NetworkSubnet{
@@ -411,6 +411,18 @@ func (c *CreatorEnhanced) createNetwork() (*hcloud.Network, error) {
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply deletion protection if configured
+	if c.Config.ProtectAgainstDeletion {
+		if err := c.HetznerClient.ChangeNetworkProtection(c.ctx, network, true); err != nil {
+			return nil, fmt.Errorf("failed to enable protection for network %s: %w", networkName, err)
+		}
+	}
+
+	return network, nil
 }
 
 // createNATGateways creates multiple NAT gateway instances for multi-location deployment
@@ -476,6 +488,13 @@ func (c *CreatorEnhanced) createNATGateways(sshKey *hcloud.SSHKey, network *hclo
 		server, err := c.HetznerClient.CreateServer(c.ctx, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create NAT gateway server %s: %w", nodeName, err)
+		}
+
+		// Apply deletion protection if configured
+		if c.Config.ProtectAgainstDeletion {
+			if err := c.HetznerClient.ChangeServerProtection(c.ctx, server, true); err != nil {
+				return nil, fmt.Errorf("failed to enable protection for NAT gateway server %s: %w", nodeName, err)
+			}
 		}
 
 		gateways = append(gateways, server)
@@ -781,6 +800,16 @@ func (c *CreatorEnhanced) createMasterNodes(sshKey *hcloud.SSHKey, network *hclo
 				return
 			}
 
+			// Apply deletion protection if configured
+			if c.Config.ProtectAgainstDeletion {
+				if err := c.HetznerClient.ChangeServerProtection(c.ctx, server, true); err != nil {
+					mu.Lock()
+					errors = append(errors, fmt.Errorf("failed to enable protection for server %s: %w", nodeName, err))
+					mu.Unlock()
+					return
+				}
+			}
+
 			mu.Lock()
 			masters[index] = server
 			mu.Unlock()
@@ -926,6 +955,16 @@ func (c *CreatorEnhanced) createWorkerNodesFromPools(sshKey *hcloud.SSHKey, netw
 					errors = append(errors, fmt.Errorf("failed to create server %s: %w", nodeName, err))
 					mu.Unlock()
 					return
+				}
+
+				// Apply deletion protection if configured
+				if c.Config.ProtectAgainstDeletion {
+					if err := c.HetznerClient.ChangeServerProtection(c.ctx, server, true); err != nil {
+						mu.Lock()
+						errors = append(errors, fmt.Errorf("failed to enable protection for server %s: %w", nodeName, err))
+						mu.Unlock()
+						return
+					}
 				}
 
 				mu.Lock()

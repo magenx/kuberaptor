@@ -116,6 +116,18 @@ func (d *Deleter) Run() error {
 			go func(srv *hcloud.Server) {
 				defer wg.Done()
 
+				// Disable deletion protection before deleting (no-op if not protected)
+				if srv.Protection.Delete {
+					if err := d.HetznerClient.ChangeServerProtection(d.ctx, srv, false); err != nil {
+						errMsg := fmt.Sprintf("Failed to disable protection for server %s: %v", srv.Name, err)
+						util.LogError(errMsg, "servers")
+						mu.Lock()
+						deletionErrors = append(deletionErrors, errMsg)
+						mu.Unlock()
+						return
+					}
+				}
+
 				util.LogInfo(fmt.Sprintf("Deleting server: %s", srv.Name), "servers")
 				if err := d.HetznerClient.DeleteServer(d.ctx, srv); err != nil {
 					errMsg := fmt.Sprintf("Failed to delete server %s: %v", srv.Name, err)
@@ -169,6 +181,15 @@ func (d *Deleter) Run() error {
 
 			// Delete load balancers
 			for _, lb := range loadBalancers {
+				// Disable deletion protection before deleting (no-op if not protected)
+				if lb.Protection.Delete {
+					if err := d.HetznerClient.ChangeLoadBalancerProtection(d.ctx, lb, false); err != nil {
+						errMsg := fmt.Sprintf("Failed to disable protection for load balancer %s: %v", lb.Name, err)
+						util.LogError(errMsg, "load balancer")
+						deletionErrors = append(deletionErrors, errMsg)
+						continue
+					}
+				}
 				util.LogInfo(fmt.Sprintf("Deleting load balancer: %s", lb.Name), "load balancer")
 				if err := d.HetznerClient.DeleteLoadBalancer(d.ctx, lb); err != nil {
 					errMsg := fmt.Sprintf("Failed to delete load balancer %s: %v", lb.Name, err)
@@ -256,6 +277,14 @@ func (d *Deleter) Run() error {
 		networkName := d.Config.ClusterName
 		network, err := d.HetznerClient.GetNetwork(d.ctx, networkName)
 		if err == nil && network != nil {
+			// Disable deletion protection before deleting (no-op if not protected)
+			if network.Protection.Delete {
+				if err := d.HetznerClient.ChangeNetworkProtection(d.ctx, network, false); err != nil {
+					errMsg := fmt.Sprintf("Failed to disable protection for network: %v", err)
+					util.LogError(errMsg, "network")
+					deletionErrors = append(deletionErrors, errMsg)
+				}
+			}
 			if err := d.HetznerClient.DeleteNetwork(d.ctx, network); err != nil {
 				errMsg := fmt.Sprintf("Failed to delete network: %v", err)
 				util.LogError(errMsg, "network")
