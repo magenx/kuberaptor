@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0-rc.9](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.8...v1.1.0-rc.9) (2026-04-08)
+
+
+### 🚦 Maintenance
+
+* Fix comment grammar in shell_test.go ([#126](https://github.com/magenx/kuberaptor/issues/126)) ([ddc8c82](https://github.com/magenx/kuberaptor/commit/ddc8c82655748d46fbcea5fac6cbb2d013f9f105))
+* Fix formatting and remove unnecessary newlines ([#125](https://github.com/magenx/kuberaptor/issues/125)) ([c2b3100](https://github.com/magenx/kuberaptor/commit/c2b3100678718fd2f8b96e441792d2d261b55474))
+
 ## [1.1.0-rc.8](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.7...v1.1.0-rc.8) (2026-04-08)
 
 
