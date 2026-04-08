@@ -38,7 +38,7 @@ jobs:
           if [ -n "$files" ]; then
             echo "Formatting the following .go files: $files"
             for file in $files; do
-              go fmt "$file"
+              go fmt "./$file"
             done
           else
             echo "No Go files changed in this pull request."
