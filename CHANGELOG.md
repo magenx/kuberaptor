@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0-rc.11](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.10...v1.1.0-rc.11) (2026-04-08)
+
+
+### 🐛 Bug Fixes
+
+* Add rebuild protection option to ChangeServerProtection ([#132](https://github.com/magenx/kuberaptor/issues/132)) ([c226a0f](https://github.com/magenx/kuberaptor/commit/c226a0fb147afeada66c0b165034c47da80bfaaf))
+
 ## [1.1.0-rc.10](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.9...v1.1.0-rc.10) (2026-04-08)
 
 
