@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0-rc.10](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.9...v1.1.0-rc.10) (2026-04-08)
+
+
+### 🚦 Maintenance
+
+* Fix comment grammar in shell_test.go ([#130](https://github.com/magenx/kuberaptor/issues/130)) ([4a26d1c](https://github.com/magenx/kuberaptor/commit/4a26d1cf9ce7406eb2b06113d9f7aaa3041799ca))
+* Update installation commands with repository name ([#128](https://github.com/magenx/kuberaptor/issues/128)) ([ff974bb](https://github.com/magenx/kuberaptor/commit/ff974bb1990b803c3575cf7012afe089fd860c71))
+* **wrkflow:** Downgrade action-gh-release version to v2.5.0 ([#129](https://github.com/magenx/kuberaptor/issues/129)) ([babe6d5](https://github.com/magenx/kuberaptor/commit/babe6d5477ff8656f6257a473fec624d8e698312))
+
 ## [1.1.0-rc.9](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.8...v1.1.0-rc.9) (2026-04-08)
 
 
