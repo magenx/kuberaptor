@@ -6,6 +6,7 @@ package util
 
 import (
 	"os"
+	"runtime"
 	"testing"
 )
 
@@ -54,9 +55,9 @@ func TestGetVersions(t *testing.T) {
 		t.Errorf("Expected kubectl version v1.35.0, got %s", installer.GetKubectlVersion())
 	}
 
-	// Helm version is now determined by the get-helm script
+	// Helm version is determined by the package manager
 	if installer.GetHelmVersion() != "" {
-		t.Error("Helm version should be empty (determined by get-helm script)")
+		t.Error("Helm version should be empty (determined by package manager)")
 	}
 }
 
@@ -84,76 +85,169 @@ func TestNewToolInstallerWithInvalidVersion(t *testing.T) {
 	}
 }
 
-func TestIsKubectlInstalled_WithKubectlInPath(t *testing.T) {
+func TestIsHcloudInstalled(t *testing.T) {
 	installer := &ToolInstaller{}
+	_ = installer.IsHcloudInstalled()
+}
 
-	// This test will pass if kubectl is in PATH, otherwise it will pass anyway
-	// as we're just testing the function works
+func TestIsKubectlInstalled(t *testing.T) {
+	installer := &ToolInstaller{}
 	_ = installer.IsKubectlInstalled()
 }
 
-func TestIsHelmInstalled_WithHelmInPath(t *testing.T) {
+func TestIsHelmInstalled(t *testing.T) {
 	installer := &ToolInstaller{}
-
-	// This test will pass if helm is in PATH, otherwise it will pass anyway
-	// as we're just testing the function works
 	_ = installer.IsHelmInstalled()
 }
 
-func TestIsKubectlAIInstalled_WithKubectlAIInPath(t *testing.T) {
+func TestIsKubectlAIInstalled(t *testing.T) {
 	installer := &ToolInstaller{}
-
-	// This test will pass if kubectl-ai is in PATH, otherwise it will pass anyway
-	// as we're just testing the function works
 	_ = installer.IsKubectlAIInstalled()
+}
+
+func TestIsCiliumInstalled(t *testing.T) {
+	installer := &ToolInstaller{}
+	_ = installer.IsCiliumInstalled()
+}
+
+func TestIsBrewInstalled(t *testing.T) {
+	installer := &ToolInstaller{}
+	result := installer.IsBrewInstalled()
+	if runtime.GOOS != "darwin" && result {
+		t.Error("brew should not be found on non-macOS platforms")
+	}
+}
+
+func TestIsWingetInstalled(t *testing.T) {
+	installer := &ToolInstaller{}
+	result := installer.IsWingetInstalled()
+	if runtime.GOOS != "windows" && result {
+		t.Error("winget should not be found on non-Windows platforms")
+	}
 }
 
 func TestCommandExists(t *testing.T) {
 	installer := &ToolInstaller{}
 
-	// Test with a command that should always exist
 	if !installer.commandExists("ls") && !installer.commandExists("dir") {
 		t.Error("Expected ls or dir to exist")
 	}
 
-	// Test with a command that should not exist
 	if installer.commandExists("this_command_definitely_does_not_exist_12345") {
 		t.Error("Expected non-existent command to return false")
 	}
 }
 
-func TestInstallKubectl_UnsupportedOS(t *testing.T) {
-	// Skip this test if we can't mock the OS
-	t.Skip("Skipping OS-specific test")
+func TestBrewToolsMap(t *testing.T) {
+	expected := map[string]string{
+		"hcloud":     "hcloud",
+		"helm":       "helm",
+		"kubectl":    "kubernetes-cli",
+		"kubectl-ai": "kubectl-ai",
+		"cilium":     "cilium-cli",
+	}
+	for tool, formula := range expected {
+		got, ok := brewTools[tool]
+		if !ok {
+			t.Errorf("brewTools map is missing entry for %q", tool)
+			continue
+		}
+		if got != formula {
+			t.Errorf("brewTools[%q] = %q, want %q", tool, got, formula)
+		}
+	}
 }
 
-func TestInstallHelm_UnsupportedOS(t *testing.T) {
-	// Skip this test if we can't mock the OS
-	t.Skip("Skipping OS-specific test")
+func TestWingetToolsMap(t *testing.T) {
+	expected := map[string]string{
+		"hcloud":  "HetznerCloud.CLI",
+		"helm":    "Helm.Helm",
+		"kubectl": "Kubernetes.kubectl",
+		"cilium":  "Cilium.CiliumCLI",
+	}
+	for tool, pkgID := range expected {
+		got, ok := wingetTools[tool]
+		if !ok {
+			t.Errorf("wingetTools map is missing entry for %q", tool)
+			continue
+		}
+		if got != pkgID {
+			t.Errorf("wingetTools[%q] = %q, want %q", tool, got, pkgID)
+		}
+	}
 }
 
-func TestInstallKubectlAI_UnsupportedOS(t *testing.T) {
-	// Skip this test if we can't mock the OS
-	t.Skip("Skipping OS-specific test")
+func TestWingetToolsMap_KubectlAINotPresent(t *testing.T) {
+	// kubectl-ai is intentionally absent from wingetTools; it uses krew instead
+	if _, ok := wingetTools["kubectl-ai"]; ok {
+		t.Error("kubectl-ai should not be in wingetTools (it is installed via krew on Windows)")
+	}
+}
+
+func TestInstallBrew_NonMacOS(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("Skipping non-macOS test on macOS")
+	}
+
+	installer := &ToolInstaller{}
+	err := installer.InstallBrew()
+	if err == nil {
+		t.Error("Expected error when installing brew on non-macOS")
+	}
+}
+
+func TestEnsurePackageManager_Linux(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping Linux-specific package manager test")
+	}
+
+	installer := &ToolInstaller{}
+	// On Linux, EnsurePackageManager should return an error (no package manager supported)
+	err := installer.EnsurePackageManager()
+	if err == nil {
+		t.Error("EnsurePackageManager should return an error on Linux (no package manager supported)")
+	}
+}
+
+func TestInstallTool_Linux_ReturnsError(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping Linux-specific installTool test")
+	}
+
+	installer := &ToolInstaller{}
+	err := installer.installTool("kubectl")
+	if err == nil {
+		t.Error("installTool should return an error on Linux")
+	}
+}
+
+func TestInstallTool_UnknownTool_Darwin(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("Skipping macOS-specific installTool test")
+	}
+
+	installer := &ToolInstaller{}
+	err := installer.installTool("unknown-tool-xyz")
+	if err == nil {
+		t.Error("Expected error for unknown tool on macOS")
+	}
 }
 
 func TestEnsureToolsInstalled_ToolsAlreadyInstalled(t *testing.T) {
 	installer, _ := NewToolInstaller("v1.32.0+k3s1")
 
-	// Check if tools are already installed
+	hcloudInstalled := installer.IsHcloudInstalled()
 	kubectlInstalled := installer.IsKubectlInstalled()
 	helmInstalled := installer.IsHelmInstalled()
 	kubectlAIInstalled := installer.IsKubectlAIInstalled()
+	ciliumInstalled := installer.IsCiliumInstalled()
 
-	if kubectlInstalled && helmInstalled && kubectlAIInstalled {
-		// All tools are already installed, test should succeed
+	if hcloudInstalled && kubectlInstalled && helmInstalled && kubectlAIInstalled && ciliumInstalled {
 		err := installer.EnsureToolsInstalled()
 		if err != nil {
 			t.Errorf("EnsureToolsInstalled failed when tools were already installed: %v", err)
 		}
 	} else {
-		// Tools not installed, skip the installation test
-		// (we don't want to modify the test system)
 		t.Skip("Tools not installed, skipping installation test to avoid system modifications")
 	}
 }
@@ -161,7 +255,6 @@ func TestEnsureToolsInstalled_ToolsAlreadyInstalled(t *testing.T) {
 func TestRunCommand_SimpleCommand(t *testing.T) {
 	installer := &ToolInstaller{}
 
-	// Test with a simple command that should work on all systems
 	var cmd string
 	var args []string
 
