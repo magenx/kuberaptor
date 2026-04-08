@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0-rc.8](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.7...v1.1.0-rc.8) (2026-04-08)
+
+
+### 🚦 Maintenance
+
+* Test release build and workflow ([#123](https://github.com/magenx/kuberaptor/issues/123)) ([c72c912](https://github.com/magenx/kuberaptor/commit/c72c91281575daa9ae81d25b673b539cd08d196b))
+* **workflow:** Update installation commands for repository name ([#122](https://github.com/magenx/kuberaptor/issues/122)) ([eaa05f9](https://github.com/magenx/kuberaptor/commit/eaa05f9789d738a1dd84231d2217e5c30fc50ed6))
+
 ## [1.1.0-rc.7](https://github.com/magenx/kuberaptor/compare/v1.0.1-rc.7...v1.1.0-rc.7) (2026-04-08)
 
 
