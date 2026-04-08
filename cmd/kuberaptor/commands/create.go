@@ -17,6 +17,7 @@ import (
 var (
 	createConfigPath string
 	createQuiet      bool
+	createSkipTools  bool
 )
 
 var createCmd = &cobra.Command{
@@ -39,14 +40,16 @@ var createCmd = &cobra.Command{
 		}
 
 		// Ensure required tools are installed (using k3s version from config)
-		fmt.Println("\nChecking for required tools:")
-		installer, err := util.NewToolInstaller(loader.Settings.K3sVersion)
-		if err != nil {
-			return fmt.Errorf("failed to initialize tool installer: %w", err)
-		}
+		if !createSkipTools {
+			fmt.Println("\nChecking for required tools:")
+			installer, err := util.NewToolInstaller(loader.Settings.K3sVersion)
+			if err != nil {
+				return fmt.Errorf("failed to initialize tool installer: %w", err)
+			}
 
-		if err := installer.EnsureToolsInstalled(); err != nil {
-			return fmt.Errorf("failed to install required tools: %w", err)
+			if err := installer.EnsureToolsInstalled(); err != nil {
+				return fmt.Errorf("failed to install required tools: %w", err)
+			}
 		}
 
 		// Run comprehensive validator
@@ -86,5 +89,6 @@ var createCmd = &cobra.Command{
 func init() {
 	createCmd.Flags().StringVarP(&createConfigPath, "config", "c", "", "Path to the YAML configuration file (required)")
 	createCmd.Flags().BoolVarP(&createQuiet, "quiet", "q", false, "Suppress the sponsor message")
+	createCmd.Flags().BoolVar(&createSkipTools, "skip-tools", false, "Skip checking and installing required tools")
 	createCmd.MarkFlagRequired("config")
 }
