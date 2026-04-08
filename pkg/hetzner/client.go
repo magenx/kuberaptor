@@ -738,7 +738,8 @@ func (c *Client) ListPlacementGroups(ctx context.Context, opts hcloud.PlacementG
 // When delete is true, the server is protected from deletion.
 func (c *Client) ChangeServerProtection(ctx context.Context, server *hcloud.Server, delete bool) error {
 	action, _, err := c.hcloud.Server.ChangeProtection(ctx, server, hcloud.ServerChangeProtectionOpts{
-		Delete: hcloud.Ptr(delete),
+		Delete:  hcloud.Ptr(delete),
+		Rebuild: hcloud.Ptr(delete),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to change protection for server %s: %w", server.Name, err)
