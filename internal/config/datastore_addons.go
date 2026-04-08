@@ -59,6 +59,7 @@ type Addons struct {
 	ClusterAutoscaler       *ClusterAutoscaler       `yaml:"cluster_autoscaler,omitempty"`
 	CloudControllerManager  *CloudControllerManager  `yaml:"cloud_controller_manager,omitempty"`
 	SystemUpgradeController *SystemUpgradeController `yaml:"system_upgrade_controller,omitempty"`
+	Kured                   *Kured                   `yaml:"kured,omitempty"`
 }
 
 // SetDefaults sets default values for addons
@@ -94,6 +95,10 @@ func (a *Addons) SetDefaults() {
 		a.SystemUpgradeController = &SystemUpgradeController{}
 	}
 	a.SystemUpgradeController.SetDefaults()
+	if a.Kured == nil {
+		a.Kured = &Kured{}
+	}
+	a.Kured.SetDefaults()
 }
 
 // Toggle represents a simple enabled/disabled toggle
@@ -194,6 +199,20 @@ func (s *SystemUpgradeController) SetDefaults() {
 	}
 	if s.CRDManifestURL == "" {
 		s.CRDManifestURL = "https://github.com/rancher/system-upgrade-controller/releases/download/v0.18.0/crd.yaml"
+	}
+}
+
+// Kured represents Kured (Kubernetes Reboot Daemon) configuration
+type Kured struct {
+	Enabled      bool     `yaml:"enabled,omitempty"`
+	ManifestURL  string   `yaml:"manifest_url,omitempty"`
+	KuredOptions []string `yaml:"kured_options,omitempty"`
+}
+
+// SetDefaults sets default values for Kured
+func (k *Kured) SetDefaults() {
+	if k.ManifestURL == "" {
+		k.ManifestURL = "https://github.com/kubereboot/kured/releases/download/1.21.0/kured-1.21.0-combined.yaml"
 	}
 }
 

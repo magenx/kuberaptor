@@ -78,6 +78,13 @@ func (i *Installer) InstallAll(firstMaster *hcloud.Server, masters []*hcloud.Ser
 		}
 	}
 
+	// Install Kured if enabled
+	if i.Config.Addons.Kured != nil && i.Config.Addons.Kured.Enabled {
+		if err := i.installKured(firstMaster, masterSSHIP); err != nil {
+			return fmt.Errorf("failed to install Kured: %w", err)
+		}
+	}
+
 	util.LogSuccess("All addons installed successfully", "addons")
 	return nil
 }
@@ -118,4 +125,10 @@ func (i *Installer) installSystemUpgradeController(firstMaster *hcloud.Server, m
 func (i *Installer) installClusterAutoscaler(firstMaster *hcloud.Server, masters []*hcloud.Server, autoscalingPools []config.WorkerNodePool, masterSSHIP string, masterClusterIP string, k3sToken string) error {
 	installer := NewClusterAutoscalerInstaller(i.Config, i.SSHClient)
 	return installer.Install(firstMaster, masters, autoscalingPools, masterSSHIP, masterClusterIP, k3sToken)
+}
+
+// installKured installs Kured (Kubernetes Reboot Daemon)
+func (i *Installer) installKured(firstMaster *hcloud.Server, masterSSHIP string) error {
+	installer := NewKuredInstaller(i.Config, i.SSHClient)
+	return installer.Install(firstMaster, masterSSHIP)
 }
