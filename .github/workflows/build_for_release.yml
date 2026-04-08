@@ -135,33 +135,33 @@ jobs:
             <details>
             <summary>Installation for <strong>linux (amd64)</strong></summary>
             <pre><code>
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-linux-amd64
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-linux-amd64.sha256
-            sha256sum -c ${{ github.repository }}-linux-amd64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
-            chmod +x ${{ github.repository }}-linux-amd64
-            mv ${{ github.repository }}-linux-amd64 /usr/local/bin/${{ github.repository }}
-            ${{ github.repository }} version
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-linux-amd64
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-linux-amd64.sha256
+            sha256sum -c ${{ github.event.repository.name }}-linux-amd64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
+            chmod +x ${{ github.event.repository.name }}-linux-amd64
+            mv ${{ github.event.repository.name }}-linux-amd64 /usr/local/bin/${{ github.event.repository.name }}
+            ${{ github.event.repository.name }} version
             </code></pre>
             </details>
             <details>
             <summary>Installation for <strong>linux (arm64)</strong></summary>
             <pre><code>
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-linux-arm64
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-linux-arm64.sha256
-            sha256sum -c ${{ github.repository }}-linux-arm64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
-            chmod +x ${{ github.repository }}-linux-arm64
-            mv ${{ github.repository }}-linux-arm64 /usr/local/bin/${{ github.repository }}
-            ${{ github.repository }} version
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-linux-arm64
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-linux-arm64.sha256
+            sha256sum -c ${{ github.event.repository.name }}-linux-arm64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
+            chmod +x ${{ github.event.repository.name }}-linux-arm64
+            mv ${{ github.event.repository.name }}-linux-arm64 /usr/local/bin/${{ github.event.repository.name }}
+            ${{ github.event.repository.name }} version
             </code></pre>
             </details>
             <details>
             <summary>Installation for <strong>darwin (arm64)</strong></summary>
             <pre><code>
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-darwin-arm64
-            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.repository }}-darwin-arm64.sha256
-            shasum -a 256 -c ${{ github.repository }}-darwin-arm64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
-            chmod +x ${{ github.repository }}-darwin-arm64
-            mv ${{ github.repository }}-darwin-arm64 /usr/local/bin/${{ github.repository }}
-            ${{ github.repository }} version
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-darwin-arm64
+            curl -fsSLO https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag_name }}/${{ github.event.repository.name }}-darwin-arm64.sha256
+            shasum -a 256 -c ${{ github.event.repository.name }}-darwin-arm64.sha256 && echo "✅ Verification passed" || (echo "❌ Verification failed" && exit 1)
+            chmod +x ${{ github.event.repository.name }}-darwin-arm64
+            mv ${{ github.event.repository.name }}-darwin-arm64 /usr/local/bin/${{ github.event.repository.name }}
+            ${{ github.event.repository.name }} version
             </code></pre>
             </details>
