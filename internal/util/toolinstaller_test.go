@@ -110,6 +110,11 @@ func TestIsCiliumInstalled(t *testing.T) {
 	_ = installer.IsCiliumInstalled()
 }
 
+func TestIsFluxInstalled(t *testing.T) {
+	installer := &ToolInstaller{}
+	_ = installer.IsFluxInstalled()
+}
+
 func TestIsBrewInstalled(t *testing.T) {
 	installer := &ToolInstaller{}
 	result := installer.IsBrewInstalled()
@@ -145,6 +150,7 @@ func TestBrewToolsMap(t *testing.T) {
 		"kubectl":    "kubernetes-cli",
 		"kubectl-ai": "kubectl-ai",
 		"cilium":     "cilium-cli",
+		"flux":       "fluxcd/tap/flux",
 	}
 	for tool, formula := range expected {
 		got, ok := brewTools[tool]
@@ -164,6 +170,7 @@ func TestWingetToolsMap(t *testing.T) {
 		"helm":    "Helm.Helm",
 		"kubectl": "Kubernetes.kubectl",
 		"cilium":  "Cilium.CiliumCLI",
+		"flux":    "FluxCD.Flux",
 	}
 	for tool, pkgID := range expected {
 		got, ok := wingetTools[tool]

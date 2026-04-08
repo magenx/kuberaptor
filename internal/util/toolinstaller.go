@@ -21,6 +21,7 @@ var brewTools = map[string]string{
 	"kubectl":    "kubernetes-cli",
 	"kubectl-ai": "kubectl-ai",
 	"cilium":     "cilium-cli",
+	"flux":       "fluxcd/tap/flux",
 }
 
 // wingetTools maps logical tool names to their winget package IDs.
@@ -30,6 +31,7 @@ var wingetTools = map[string]string{
 	"helm":    "Helm.Helm",
 	"kubectl": "Kubernetes.kubectl",
 	"cilium":  "Cilium.CiliumCLI",
+	"flux":    "FluxCD.Flux",
 }
 
 // ToolInstaller handles detection and installation of required tools
@@ -130,6 +132,12 @@ func (t *ToolInstaller) IsKubectlAIInstalled() bool {
 // IsCiliumInstalled checks if cilium CLI is available
 func (t *ToolInstaller) IsCiliumInstalled() bool {
 	_, err := exec.LookPath("cilium")
+	return err == nil
+}
+
+// IsFluxInstalled checks if the Flux CLI is available
+func (t *ToolInstaller) IsFluxInstalled() bool {
+	_, err := exec.LookPath("flux")
 	return err == nil
 }
 
@@ -310,8 +318,16 @@ func (t *ToolInstaller) InstallCilium() error {
 	return t.installTool("cilium")
 }
 
+// InstallFlux installs the Flux CLI.
+// macOS: brew install fluxcd/tap/flux
+// Windows: winget install -e --id FluxCD.Flux
+func (t *ToolInstaller) InstallFlux() error {
+	fmt.Println("Installing flux CLI...")
+	return t.installTool("flux")
+}
+
 // EnsureToolsInstalled ensures the package manager is available and then checks
-// and installs hcloud CLI, kubectl, helm, kubectl-ai, and cilium CLI if needed.
+// and installs hcloud CLI, kubectl, helm, kubectl-ai, cilium CLI, and flux CLI if needed.
 // Tools are installed in the following order:
 // 1. Package manager (brew on macOS, winget on Windows)
 // 2. hcloud     - Hetzner Cloud CLI
@@ -319,6 +335,7 @@ func (t *ToolInstaller) InstallCilium() error {
 // 4. helm       - Kubernetes package manager
 // 5. kubectl-ai - AI-powered kubectl assistant
 // 6. cilium     - Cilium CNI CLI tool
+// 7. flux       - Flux GitOps CLI tool
 func (t *ToolInstaller) EnsureToolsInstalled() error {
 	// Ensure the appropriate package manager is available first
 	if err := t.EnsurePackageManager(); err != nil {
@@ -365,6 +382,14 @@ func (t *ToolInstaller) EnsureToolsInstalled() error {
 		}
 	} else {
 		fmt.Println("✓ cilium CLI is already installed")
+	}
+
+	if !t.IsFluxInstalled() {
+		if err := t.InstallFlux(); err != nil {
+			errors = append(errors, fmt.Sprintf("flux: %v", err))
+		}
+	} else {
+		fmt.Println("✓ flux CLI is already installed")
 	}
 
 	if len(errors) > 0 {
