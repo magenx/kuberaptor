@@ -143,7 +143,6 @@ jobs:
             ${{ github.repository }} version
             </code></pre>
             </details>
-            
             <details>
             <summary>Installation for <strong>linux (arm64)</strong></summary>
             <pre><code>
@@ -155,7 +154,6 @@ jobs:
             ${{ github.repository }} version
             </code></pre>
             </details>
-            
             <details>
             <summary>Installation for <strong>darwin (arm64)</strong></summary>
             <pre><code>
@@ -167,4 +165,3 @@ jobs:
             ${{ github.repository }} version
             </code></pre>
             </details>
-            
