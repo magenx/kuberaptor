@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0-rc.18](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.17...v1.1.0-rc.18) (2026-04-09)
+
+
+### 🛠️ Refactoring
+
+* Replace Go HTTP download plumbing with curl ([#150](https://github.com/magenx/kuberaptor/issues/150)) ([f94097d](https://github.com/magenx/kuberaptor/commit/f94097d5bf286c89d0f92999f1a8f947746a92a6))
+
 ## [1.1.0-rc.17](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.16...v1.1.0-rc.17) (2026-04-09)
 
 
