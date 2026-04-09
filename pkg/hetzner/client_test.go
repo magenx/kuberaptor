@@ -101,3 +101,24 @@ func TestChangeNetworkProtection_InvalidToken(t *testing.T) {
 		t.Error("expected error for invalid token, got nil")
 	}
 }
+
+// TestGetHCloudClient verifies that GetHCloudClient returns a non-nil underlying client
+func TestGetHCloudClient(t *testing.T) {
+	client := NewClient("test-token")
+
+	hc := client.GetHCloudClient()
+	if hc == nil {
+		t.Error("GetHCloudClient() returned nil")
+	}
+}
+
+// TestWaitForServerStatus_NilServer verifies early return on nil server
+func TestWaitForServerStatus_NilServer(t *testing.T) {
+	client := NewClient("test-token")
+	ctx := context.Background()
+
+	err := client.WaitForServerStatus(ctx, nil, hcloud.ServerStatusRunning, 0)
+	if err == nil {
+		t.Error("expected error for nil server, got nil")
+	}
+}

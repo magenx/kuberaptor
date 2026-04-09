@@ -76,6 +76,11 @@ func (s *SSH) SetBastion(host string, port int) {
 	s.bastionPort = port
 }
 
+// BastionHost returns the currently configured bastion host, or empty string if none
+func (s *SSH) BastionHost() string {
+	return s.bastionHost
+}
+
 // GetPublicKey returns the public key content
 func (s *SSH) GetPublicKey() ([]byte, error) {
 	if len(s.publicKey) == 0 {

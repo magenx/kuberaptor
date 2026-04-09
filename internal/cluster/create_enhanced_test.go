@@ -746,3 +746,199 @@ users:
 		})
 	}
 }
+
+// TestBuildLabelsAndTaintsForWorker tests the buildLabelsAndTaintsForWorker function
+func TestBuildLabelsAndTaintsForWorker(t *testing.T) {
+	creator := &CreatorEnhanced{
+		Config: &config.Main{ClusterName: "test-cluster"},
+	}
+
+	tests := []struct {
+		name     string
+		pool     *config.WorkerNodePool
+		contains []string
+		missing  []string
+	}{
+		{
+			name:    "nil pool returns empty string",
+			pool:    nil,
+			missing: []string{"--node-label", "--node-taint"},
+		},
+		{
+			name: "pool with no labels or taints",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+				},
+				Locations: []string{"fsn1"},
+			},
+			missing: []string{"--node-label", "--node-taint"},
+		},
+		{
+			name: "pool with kubernetes labels",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+					Kubernetes: &config.KubernetesConfig{
+						Labels: []config.Label{
+							{Key: "role", Value: "worker"},
+							{Key: "env", Value: "production"},
+						},
+					},
+				},
+				Locations: []string{"fsn1"},
+			},
+			contains: []string{"--node-label=", "role=worker", "env=production"},
+			missing:  []string{"--node-taint"},
+		},
+		{
+			name: "pool with kubernetes taints",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+					Kubernetes: &config.KubernetesConfig{
+						Taints: []config.Taint{
+							{Key: "dedicated", Value: "gpu", Effect: "NoSchedule"},
+						},
+					},
+				},
+				Locations: []string{"fsn1"},
+			},
+			contains: []string{"--node-taint=", "dedicated=gpu:NoSchedule"},
+			missing:  []string{"--node-label"},
+		},
+		{
+			name: "pool with both labels and taints",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+					Kubernetes: &config.KubernetesConfig{
+						Labels: []config.Label{
+							{Key: "tier", Value: "backend"},
+						},
+						Taints: []config.Taint{
+							{Key: "workload", Value: "database", Effect: "NoSchedule"},
+						},
+					},
+				},
+				Locations: []string{"fsn1"},
+			},
+			contains: []string{"--node-label=", "tier=backend", "--node-taint=", "workload=database:NoSchedule"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := creator.buildLabelsAndTaintsForWorker(tt.pool)
+			for _, s := range tt.contains {
+				if !strings.Contains(result, s) {
+					t.Errorf("expected result to contain %q, got: %q", s, result)
+				}
+			}
+			for _, s := range tt.missing {
+				if strings.Contains(result, s) {
+					t.Errorf("expected result NOT to contain %q, got: %q", s, result)
+				}
+			}
+		})
+	}
+}
+
+// TestBuildHetznerServerLabels tests the buildHetznerServerLabels function
+func TestBuildHetznerServerLabels(t *testing.T) {
+	tests := []struct {
+		name            string
+		clusterName     string
+		pool            *config.WorkerNodePool
+		poolName        string
+		location        string
+		expectLabels    map[string]string
+		forbiddenLabels map[string]string
+	}{
+		{
+			name:        "default labels with nil pool",
+			clusterName: "my-cluster",
+			pool:        nil,
+			poolName:    "workers",
+			location:    "fsn1",
+			expectLabels: map[string]string{
+				"cluster":  "my-cluster",
+				"role":     "worker",
+				"pool":     "workers",
+				"location": "fsn1",
+				"managed":  "kuberaptor",
+			},
+		},
+		{
+			name:        "custom labels are merged",
+			clusterName: "my-cluster",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+					Hetzner: &config.HetznerConfig{
+						Labels: []config.Label{
+							{Key: "env", Value: "staging"},
+							{Key: "team", Value: "platform"},
+						},
+					},
+				},
+				Locations: []string{"fsn1"},
+			},
+			poolName: "backend",
+			location: "fsn1",
+			expectLabels: map[string]string{
+				"cluster":  "my-cluster",
+				"role":     "worker",
+				"pool":     "backend",
+				"location": "fsn1",
+				"managed":  "kuberaptor",
+				"env":      "staging",
+				"team":     "platform",
+			},
+		},
+		{
+			name:        "managed label cannot be overridden",
+			clusterName: "my-cluster",
+			pool: &config.WorkerNodePool{
+				NodePool: config.NodePool{
+					InstanceType: "cx22",
+					Hetzner: &config.HetznerConfig{
+						Labels: []config.Label{
+							{Key: "managed", Value: "should-not-override"},
+						},
+					},
+				},
+				Locations: []string{"fsn1"},
+			},
+			poolName: "workers",
+			location: "nbg1",
+			expectLabels: map[string]string{
+				"managed": "kuberaptor",
+			},
+			forbiddenLabels: map[string]string{
+				"managed": "should-not-override",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			creator := &CreatorEnhanced{
+				Config: &config.Main{ClusterName: tt.clusterName},
+			}
+
+			labels := creator.buildHetznerServerLabels(tt.pool, tt.poolName, tt.location)
+
+			for k, v := range tt.expectLabels {
+				if labels[k] != v {
+					t.Errorf("expected label[%q]=%q, got %q", k, v, labels[k])
+				}
+			}
+			for k, forbidden := range tt.forbiddenLabels {
+				if labels[k] == forbidden {
+					t.Errorf("label[%q] should not be %q", k, forbidden)
+				}
+			}
+		})
+	}
+}

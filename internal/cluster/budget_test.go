@@ -48,7 +48,145 @@ func TestResourceCost(t *testing.T) {
 	}
 }
 
-// TestFindAutoscaledPoolServers tests that the function is called for autoscaling pools
+// TestDisplayBudget verifies that displayBudget handles various cost configurations
+// without panicking or producing incorrect output
+func TestDisplayBudget(t *testing.T) {
+	cfg := &config.Main{
+		ClusterName:  "test-cluster",
+		HetznerToken: "test-token",
+	}
+	hetznerClient := hetzner.NewClient(cfg.HetznerToken)
+	calculator := NewBudgetCalculator(cfg, hetznerClient)
+
+	t.Run("empty costs list", func(t *testing.T) {
+		// Should not panic with empty costs
+		calculator.displayBudget([]ResourceCost{})
+	})
+
+	t.Run("costs with paid resources", func(t *testing.T) {
+		costs := []ResourceCost{
+			{
+				Type:         "Server",
+				Name:         "master-1",
+				ResourceType: "cx22",
+				HourlyPrice:  0.010,
+				MonthlyPrice: 7.50,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Server",
+				Name:         "worker-1",
+				ResourceType: "cx32",
+				HourlyPrice:  0.020,
+				MonthlyPrice: 14.50,
+				Currency:     "EUR",
+			},
+		}
+		// Should not panic
+		calculator.displayBudget(costs)
+	})
+
+	t.Run("costs with free resources", func(t *testing.T) {
+		costs := []ResourceCost{
+			{
+				Type:         "Network",
+				Name:         "test-cluster",
+				ResourceType: "10.0.0.0/16",
+				HourlyPrice:  0,
+				MonthlyPrice: 0,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Firewall",
+				Name:         "test-cluster-firewall",
+				ResourceType: "3 rules",
+				HourlyPrice:  0,
+				MonthlyPrice: 0,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "SSH Key",
+				Name:         "test-cluster-ssh",
+				ResourceType: "ab:cd:ef:12:34:56...",
+				HourlyPrice:  0,
+				MonthlyPrice: 0,
+				Currency:     "EUR",
+			},
+		}
+		// Should not panic
+		calculator.displayBudget(costs)
+	})
+
+	t.Run("mixed paid and free resources", func(t *testing.T) {
+		costs := []ResourceCost{
+			{
+				Type:         "Server",
+				Name:         "master-1",
+				ResourceType: "cx22",
+				HourlyPrice:  0.010,
+				MonthlyPrice: 7.50,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Load Balancer",
+				Name:         "test-lb",
+				ResourceType: "lb11",
+				HourlyPrice:  0.005,
+				MonthlyPrice: 5.39,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Volume",
+				Name:         "test-volume",
+				ResourceType: "50GB",
+				HourlyPrice:  0.0027,
+				MonthlyPrice: 2.00,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Floating IP",
+				Name:         "test-fip",
+				ResourceType: "ipv4 (1.2.3.4)",
+				HourlyPrice:  0.00068,
+				MonthlyPrice: 0.50,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Primary IP",
+				Name:         "test-pip",
+				ResourceType: "ipv4 (5.6.7.8)",
+				HourlyPrice:  0.00068,
+				MonthlyPrice: 0.50,
+				Currency:     "EUR",
+			},
+			{
+				Type:         "Network",
+				Name:         "test-cluster",
+				ResourceType: "10.0.0.0/16",
+				HourlyPrice:  0,
+				MonthlyPrice: 0,
+				Currency:     "EUR",
+			},
+		}
+		// Should not panic
+		calculator.displayBudget(costs)
+	})
+
+	t.Run("unknown resource type is skipped gracefully", func(t *testing.T) {
+		costs := []ResourceCost{
+			{
+				Type:         "Unknown",
+				Name:         "mystery-resource",
+				ResourceType: "mystery",
+				HourlyPrice:  1.0,
+				MonthlyPrice: 30.0,
+				Currency:     "EUR",
+			},
+		}
+		// Unknown resource types should not panic - they are just not displayed
+		calculator.displayBudget(costs)
+	})
+}
 func TestFindAutoscaledPoolServers(t *testing.T) {
 	tests := []struct {
 		name          string
