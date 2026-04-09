@@ -49,6 +49,12 @@ jobs:
             runner: macos-latest
             goos: darwin
             goarch: arm64
+          - os: windows
+            arch: amd64
+            runner: windows-latest
+            goos: windows
+            goarch: amd64
+
     env:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
@@ -81,9 +87,14 @@ jobs:
           # Fetch the version from the GitHub release tag
           VERSION="${{ inputs.tag_name }}"
           
+          EXT=""
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            EXT=".exe"
+          fi
+          
           # Dynamically set the binary name based on OS and architecture
-          BINARY_NAME_ARCH="${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}"
-          echo "binary_name_arch=${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}" >> ${GITHUB_OUTPUT}
+          BINARY_NAME_ARCH="${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}${EXT}"
+          echo "binary_name_arch=${BINARY_NAME_ARCH}" >> "${GITHUB_OUTPUT}"
           echo "binary_name=${GITHUB_REPOSITORY##*/}" >> ${GITHUB_OUTPUT}
           
           echo "Building ${BINARY_NAME_ARCH} with version ${VERSION}"
@@ -164,5 +175,37 @@ jobs:
             chmod +x ${{ github.event.repository.name }}-darwin-arm64
             mv ${{ github.event.repository.name }}-darwin-arm64 /usr/local/bin/${{ github.event.repository.name }}
             ${{ github.event.repository.name }} version
+            </code></pre>
+            </details>
+            <details>
+            <summary>Installation for <strong>windows (amd64)</strong></summary>
+            <pre><code>
+            # PowerShell (Windows 10/11)
+            $ErrorActionPreference = "Stop"
+            $repo = "${{ github.repository }}"
+            $tag  = "${{ inputs.tag_name }}"
+            $name = "${{ github.event.repository.name }}"
+            $bin = "$name-windows-amd64.exe"
+            $sum = "$bin.sha256"
+            $urlBin = "https://github.com/$repo/releases/download/$tag/$bin"
+            $urlSum = "https://github.com/$repo/releases/download/$tag/$sum"
+            # Download
+            Invoke-WebRequest -Uri $urlBin -OutFile $bin
+            Invoke-WebRequest -Uri $urlSum -OutFile $sum
+            # Verify SHA256 (expected from .sha256 file vs actual hash)
+            $expected = (Get-Content $sum -Raw).Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)[0].Trim().ToLower()
+            $actual   = (Get-FileHash -Algorithm SHA256 $bin).Hash.ToLower()
+            if ($expected -ne $actual) {
+              Write-Error "❌ Verification failed: expected $expected got $actual"
+              exit 1
+            } else {
+              Write-Host "✅ Verification passed"
+            }
+            # Install (no admin): copy to a per-user folder
+            $installDir = Join-Path $env:LOCALAPPDATA "Programs\$name"
+            New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+            Copy-Item -Force $bin (Join-Path $installDir "$name.exe")
+            # Run
+            & (Join-Path $installDir "$name.exe") version
             </code></pre>
             </details>
