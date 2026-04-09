@@ -73,11 +73,12 @@ jobs:
 
       - name: Run all tests
         id: test
+        shell: bash
         env:
           CGO_ENABLED: 1
         run: |
           # Run all test
-          go test -v -race -coverprofile=coverage.out ./...
+          go test -v -race -coverprofile=${RUNNER_TEMP}/coverage.out ./...
       
       - name: Build go binary
         id: build
