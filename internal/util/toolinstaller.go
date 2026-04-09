@@ -310,8 +310,9 @@ func (t *ToolInstaller) installHcloudLinux() error {
 		return fmt.Errorf("unsupported architecture for hcloud deb install: %s", arch)
 	}
 
-	// Resolve the latest release tag via the GitHub redirect — curl -fsSLI resolves
-	// the Location header; we ask for the final URL and extract the tag from it.
+	// Resolve the latest release tag by following GitHub's /releases/latest redirect.
+	// curl -L follows the redirect chain; -w %{url_effective} prints the final URL
+	// which ends with /releases/tag/vX.Y.Z.
 	cmd := exec.Command("curl", "-fsSLI", "-o", "/dev/null", "-w", "%{url_effective}",
 		"https://github.com/hetznercloud/cli/releases/latest")
 	out, err := cmd.Output()
@@ -321,7 +322,7 @@ func (t *ToolInstaller) installHcloudLinux() error {
 	effectiveURL := strings.TrimSpace(string(out))
 	// URL ends with /releases/tag/vX.Y.Z
 	parts := strings.Split(effectiveURL, "/")
-	if len(parts) == 0 {
+	if len(parts) < 2 {
 		return fmt.Errorf("unexpected redirect URL for hcloud latest release: %s", effectiveURL)
 	}
 	tag := parts[len(parts)-1]
