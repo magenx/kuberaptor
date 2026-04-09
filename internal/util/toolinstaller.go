@@ -6,18 +6,12 @@ package util
 
 import (
 	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"math/rand/v2"
-	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // brewTools maps logical tool names to their Homebrew formula names (macOS only).
@@ -316,41 +310,32 @@ func (t *ToolInstaller) installHcloudLinux() error {
 		return fmt.Errorf("unsupported architecture for hcloud deb install: %s", arch)
 	}
 
-	// Resolve the latest release tag via GitHub API
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	apiURL := "https://api.github.com/repos/hetznercloud/cli/releases/latest"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	// Resolve the latest release tag via the GitHub redirect — curl -fsSLI resolves
+	// the Location header; we ask for the final URL and extract the tag from it.
+	cmd := exec.Command("curl", "-fsSLI", "-o", "/dev/null", "-w", "%{url_effective}",
+		"https://github.com/hetznercloud/cli/releases/latest")
+	out, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("failed to create request for hcloud release info: %w", err)
+		return fmt.Errorf("failed to resolve hcloud latest release URL: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to fetch hcloud latest release info: %w", err)
+	effectiveURL := strings.TrimSpace(string(out))
+	// URL ends with /releases/tag/vX.Y.Z
+	parts := strings.Split(effectiveURL, "/")
+	if len(parts) == 0 {
+		return fmt.Errorf("unexpected redirect URL for hcloud latest release: %s", effectiveURL)
 	}
-	defer resp.Body.Close()
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return fmt.Errorf("failed to parse hcloud release response: %w", err)
-	}
-	if release.TagName == "" {
+	tag := parts[len(parts)-1]
+	if tag == "" {
 		return fmt.Errorf("hcloud latest release tag is empty")
 	}
-	tag := release.TagName
-	// Strip leading 'v' for the filename (e.g. v1.47.0 -> 1.47.0)
 	version := strings.TrimPrefix(tag, "v")
 
 	debFile := fmt.Sprintf("hcloud-linux-%s.deb", debArch)
 	downloadURL := fmt.Sprintf("https://github.com/hetznercloud/cli/releases/download/%s/%s", tag, debFile)
+	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
 
 	fmt.Printf("Downloading hcloud %s (%s)...\n", tag, debArch)
-
-	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
-	if err := t.downloadFile(tmpPath, downloadURL); err != nil {
+	if err := t.runCommand("curl", "-fsSL", "-o", tmpPath, downloadURL); err != nil {
 		return fmt.Errorf("failed to download hcloud deb package: %w", err)
 	}
 	defer os.Remove(tmpPath)
@@ -362,103 +347,6 @@ func (t *ToolInstaller) installHcloudLinux() error {
 
 	fmt.Printf("✓ hcloud %s installed successfully\n", version)
 	return nil
-}
-
-// downloadClient is a shared HTTP client with transport-level timeouts for file downloads.
-var downloadClient = &http.Client{
-	Transport: &http.Transport{
-		TLSHandshakeTimeout:   30 * time.Second,
-		ResponseHeaderTimeout: 30 * time.Second,
-		IdleConnTimeout:       90 * time.Second,
-	},
-}
-
-const (
-	downloadMaxAttempts = 5
-	downloadBaseDelay   = 2 * time.Second
-	downloadMaxDelay    = 60 * time.Second
-)
-
-// downloadFile downloads a URL to a local file path with retry and exponential backoff.
-// It retries on network errors, HTTP 429, and HTTP 5xx responses, and gives up
-// immediately on other HTTP errors (e.g. 404).
-func (t *ToolInstaller) downloadFile(dest, url string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	var lastErr error
-	for attempt := 1; attempt <= downloadMaxAttempts; attempt++ {
-		if attempt > 1 {
-			delay := downloadBaseDelay << uint(attempt-2)
-			if delay > downloadMaxDelay {
-				delay = downloadMaxDelay
-			}
-			jitter := time.Duration(rand.Int64N(int64(delay)/4 + 1))
-			wait := delay + jitter
-			fmt.Printf("Retrying download (attempt %d/%d) after %s...\n", attempt, downloadMaxAttempts, wait.Round(time.Millisecond))
-			select {
-			case <-time.After(wait):
-			case <-ctx.Done():
-				return fmt.Errorf("download aborted: %w", ctx.Err())
-			}
-		}
-
-		var retryable bool
-		lastErr, retryable = t.attemptDownload(ctx, dest, url)
-		if lastErr == nil {
-			return nil
-		}
-		if !retryable {
-			return lastErr
-		}
-	}
-	return fmt.Errorf("download failed after %d attempts: %w", downloadMaxAttempts, lastErr)
-}
-
-// attemptDownload performs a single HTTP GET download to dest.
-// It returns the error and whether it is transient and worth retrying.
-func (t *ToolInstaller) attemptDownload(ctx context.Context, dest, url string) (error, bool) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create download request: %w", err), false
-	}
-
-	resp, err := downloadClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("HTTP GET %s failed: %w", url, err), true
-	}
-	defer resp.Body.Close()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		// proceed to stream body to disk
-	case resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500:
-		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode), true
-	default:
-		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode), false
-	}
-
-	f, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("failed to create file %s: %w", dest, err), false
-	}
-
-	_, copyErr := io.Copy(f, resp.Body)
-	closeErr := f.Close()
-
-	if copyErr != nil {
-		if removeErr := os.Remove(dest); removeErr != nil && !os.IsNotExist(removeErr) {
-			fmt.Fprintf(os.Stderr, "warning: failed to remove partial file %s: %v\n", dest, removeErr)
-		}
-		return fmt.Errorf("failed to write file %s: %w", dest, copyErr), true
-	}
-	if closeErr != nil {
-		if removeErr := os.Remove(dest); removeErr != nil && !os.IsNotExist(removeErr) {
-			fmt.Fprintf(os.Stderr, "warning: failed to remove partial file %s: %v\n", dest, removeErr)
-		}
-		return fmt.Errorf("failed to close file %s: %w", dest, closeErr), false
-	}
-	return nil, false
 }
 
 // InstallKubectl installs kubectl.
