@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0-rc.12](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.11...v1.1.0-rc.12) (2026-04-09)
+
+
+### 🛠️ Refactoring
+
+* Support Homebrew installation on Linux ([#136](https://github.com/magenx/kuberaptor/issues/136)) ([396e0c0](https://github.com/magenx/kuberaptor/commit/396e0c016f89bf531cc1667d982c18f3f7370851))
+
+
+### 🚦 Maintenance
+
+* Enhance README with Hetzner links and details ([#134](https://github.com/magenx/kuberaptor/issues/134)) ([7c34bce](https://github.com/magenx/kuberaptor/commit/7c34bcef5eb0b223116e0e3835aeb3d374cda79a))
+* **workflow:** Add Windows build support to CI workflow ([#135](https://github.com/magenx/kuberaptor/issues/135)) ([040002b](https://github.com/magenx/kuberaptor/commit/040002becf99f77885cf8e81adf02ed99566f753))
+
 ## [1.1.0-rc.11](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.10...v1.1.0-rc.11) (2026-04-08)
 
 
