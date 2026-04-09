@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -363,35 +364,97 @@ func (t *ToolInstaller) installHcloudLinux() error {
 	return nil
 }
 
-// downloadFile downloads a URL to a local file path.
+// downloadClient is a shared HTTP client with transport-level timeouts for file downloads.
+var downloadClient = &http.Client{
+	Transport: &http.Transport{
+		TLSHandshakeTimeout:   30 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
+		IdleConnTimeout:       90 * time.Second,
+	},
+}
+
+const (
+	downloadMaxAttempts = 5
+	downloadBaseDelay   = 2 * time.Second
+	downloadMaxDelay    = 60 * time.Second
+)
+
+// downloadFile downloads a URL to a local file path with retry and exponential backoff.
+// It retries on network errors, HTTP 429, and HTTP 5xx responses, and gives up
+// immediately on other HTTP errors (e.g. 404).
 func (t *ToolInstaller) downloadFile(dest, url string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	var lastErr error
+	for attempt := 1; attempt <= downloadMaxAttempts; attempt++ {
+		if attempt > 1 {
+			delay := downloadBaseDelay << uint(attempt-2)
+			if delay > downloadMaxDelay {
+				delay = downloadMaxDelay
+			}
+			jitter := time.Duration(rand.Int63n(int64(delay)/4 + 1))
+			wait := delay + jitter
+			fmt.Printf("Retrying download (attempt %d/%d) after %s...\n", attempt, downloadMaxAttempts, wait.Round(time.Millisecond))
+			select {
+			case <-time.After(wait):
+			case <-ctx.Done():
+				return fmt.Errorf("download aborted: %w", ctx.Err())
+			}
+		}
+
+		var retryable bool
+		lastErr, retryable = t.attemptDownload(ctx, dest, url)
+		if lastErr == nil {
+			return nil
+		}
+		if !retryable {
+			return lastErr
+		}
+	}
+	return fmt.Errorf("download failed after %d attempts: %w", downloadMaxAttempts, lastErr)
+}
+
+// attemptDownload performs a single HTTP GET download to dest.
+// It returns the error and whether it is transient and worth retrying.
+func (t *ToolInstaller) attemptDownload(ctx context.Context, dest, url string) (error, bool) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create download request: %w", err)
+		return fmt.Errorf("failed to create download request: %w", err), false
 	}
-	resp, err := http.DefaultClient.Do(req)
+
+	resp, err := downloadClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("HTTP GET %s failed: %w", url, err)
+		return fmt.Errorf("HTTP GET %s failed: %w", url, err), true
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode)
+	switch {
+	case resp.StatusCode == http.StatusOK:
+		// proceed to stream body to disk
+	case resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500:
+		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode), true
+	default:
+		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode), false
 	}
 
 	f, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("failed to create file %s: %w", dest, err)
+		return fmt.Errorf("failed to create file %s: %w", dest, err), false
 	}
-	defer f.Close()
 
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		return fmt.Errorf("failed to write file %s: %w", dest, err)
+	_, copyErr := io.Copy(f, resp.Body)
+	closeErr := f.Close()
+
+	if copyErr != nil {
+		os.Remove(dest)
+		return fmt.Errorf("failed to write file %s: %w", dest, copyErr), true
 	}
-	return nil
+	if closeErr != nil {
+		os.Remove(dest)
+		return fmt.Errorf("failed to close file %s: %w", dest, closeErr), false
+	}
+	return nil, false
 }
 
 // InstallKubectl installs kubectl.

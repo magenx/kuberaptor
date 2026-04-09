@@ -5,8 +5,12 @@
 package util
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"runtime"
+	"sync/atomic"
 	"testing"
 )
 
@@ -322,5 +326,135 @@ func TestRunCommand_SimpleCommand(t *testing.T) {
 	err := installer.runCommand(cmd, args...)
 	if err != nil {
 		t.Errorf("runCommand failed for simple echo command: %v", err)
+	}
+}
+
+// TestDownloadFile_Success verifies that a straightforward 200 OK response writes the file correctly.
+func TestDownloadFile_Success(t *testing.T) {
+	want := "hello download"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(want)) //nolint:errcheck
+	}))
+	defer srv.Close()
+
+	dest := t.TempDir() + "/out.bin"
+	installer := &ToolInstaller{}
+	if err := installer.downloadFile(dest, srv.URL); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("failed to read dest file: %v", err)
+	}
+	if string(got) != want {
+		t.Errorf("file content = %q, want %q", string(got), want)
+	}
+}
+
+// TestDownloadFile_404_NoRetry verifies that a 404 is returned immediately without retrying.
+func TestDownloadFile_404_NoRetry(t *testing.T) {
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	installer := &ToolInstaller{}
+	err := installer.downloadFile(t.TempDir()+"/out.bin", srv.URL)
+	if err == nil {
+		t.Fatal("expected error for 404, got nil")
+	}
+	if calls.Load() != 1 {
+		t.Errorf("expected exactly 1 attempt for 404, got %d", calls.Load())
+	}
+}
+
+// TestDownloadFile_5xx_Retries verifies that 5xx responses are retried up to the maximum.
+func TestDownloadFile_5xx_Retries(t *testing.T) {
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	installer := &ToolInstaller{}
+	err := installer.downloadFile(t.TempDir()+"/out.bin", srv.URL)
+	if err == nil {
+		t.Fatal("expected error after exhausting retries, got nil")
+	}
+	if calls.Load() != downloadMaxAttempts {
+		t.Errorf("expected %d attempts for 5xx, got %d", downloadMaxAttempts, calls.Load())
+	}
+}
+
+// TestDownloadFile_RetryThenSuccess verifies that a transient error followed by a 200 succeeds.
+func TestDownloadFile_RetryThenSuccess(t *testing.T) {
+	want := "recovered"
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := calls.Add(1)
+		if n < 3 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(want)) //nolint:errcheck
+	}))
+	defer srv.Close()
+
+	dest := t.TempDir() + "/out.bin"
+	installer := &ToolInstaller{}
+	if err := installer.downloadFile(dest, srv.URL); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("failed to read dest file: %v", err)
+	}
+	if string(got) != want {
+		t.Errorf("file content = %q, want %q", string(got), want)
+	}
+	if calls.Load() != 3 {
+		t.Errorf("expected 3 attempts, got %d", calls.Load())
+	}
+}
+
+// TestDownloadFile_429_Retries verifies that HTTP 429 responses are treated as retryable.
+func TestDownloadFile_429_Retries(t *testing.T) {
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer srv.Close()
+
+	installer := &ToolInstaller{}
+	err := installer.downloadFile(t.TempDir()+"/out.bin", srv.URL)
+	if err == nil {
+		t.Fatal("expected error after exhausting retries on 429, got nil")
+	}
+	if calls.Load() != downloadMaxAttempts {
+		t.Errorf("expected %d attempts for 429, got %d", downloadMaxAttempts, calls.Load())
+	}
+}
+
+// TestAttemptDownload_ContextCancelled verifies that a cancelled context is respected.
+func TestAttemptDownload_ContextCancelled(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("data")) //nolint:errcheck
+	}))
+	defer srv.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately
+
+	installer := &ToolInstaller{}
+	err, _ := installer.attemptDownload(ctx, t.TempDir()+"/out.bin", srv.URL)
+	if err == nil {
+		t.Fatal("expected error for cancelled context, got nil")
 	}
 }
