@@ -21,8 +21,8 @@ networking:
   ssh:
     port: 22
     use_agent: false
-    public_key_path: "%s"
-    private_key_path: "%s"
+    public_key_path: '%s'
+    private_key_path: '%s'
 
   allowed_networks:
     ssh:
