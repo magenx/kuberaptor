@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"os/exec"
@@ -393,7 +393,7 @@ func (t *ToolInstaller) downloadFile(dest, url string) error {
 			if delay > downloadMaxDelay {
 				delay = downloadMaxDelay
 			}
-			jitter := time.Duration(rand.Int63n(int64(delay)/4 + 1))
+			jitter := time.Duration(rand.Int64N(int64(delay)/4 + 1))
 			wait := delay + jitter
 			fmt.Printf("Retrying download (attempt %d/%d) after %s...\n", attempt, downloadMaxAttempts, wait.Round(time.Millisecond))
 			select {
@@ -447,11 +447,15 @@ func (t *ToolInstaller) attemptDownload(ctx context.Context, dest, url string) (
 	closeErr := f.Close()
 
 	if copyErr != nil {
-		os.Remove(dest)
+		if removeErr := os.Remove(dest); removeErr != nil && !os.IsNotExist(removeErr) {
+			fmt.Fprintf(os.Stderr, "warning: failed to remove partial file %s: %v\n", dest, removeErr)
+		}
 		return fmt.Errorf("failed to write file %s: %w", dest, copyErr), true
 	}
 	if closeErr != nil {
-		os.Remove(dest)
+		if removeErr := os.Remove(dest); removeErr != nil && !os.IsNotExist(removeErr) {
+			fmt.Fprintf(os.Stderr, "warning: failed to remove partial file %s: %v\n", dest, removeErr)
+		}
 		return fmt.Errorf("failed to close file %s: %w", dest, closeErr), false
 	}
 	return nil, false
