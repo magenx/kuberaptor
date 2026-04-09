@@ -29,35 +29,8 @@ concurrency:
 
 jobs:
   build-release:
-    name: Build Go Binary - ${{ matrix.os }}-${{ matrix.arch }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: amd64
-            runner: ubuntu-latest
-            goos: linux
-            goarch: amd64
-          - os: linux
-            arch: arm64
-            runner: ubuntu-24.04-arm
-            goos: linux
-            goarch: arm64
-          - os: darwin
-            arch: arm64
-            runner: macos-latest
-            goos: darwin
-            goarch: arm64
-          - os: windows
-            arch: amd64
-            runner: windows-latest
-            goos: windows
-            goarch: amd64
-
-    env:
-      GOOS: ${{ matrix.goos }}
-      GOARCH: ${{ matrix.goarch }}
+    name: Build Go Binary
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code at release sha
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -80,46 +53,46 @@ jobs:
           # Run all test
           go test -v -race -coverprofile=${RUNNER_TEMP}/coverage.out ./...
       
-      - name: Build go binary
+      - name: Build release binaries
         id: build
+        shell: bash
         env:
           CGO_ENABLED: 0
         run: |
-          # Fetch the version from the GitHub release tag
+          set -euo pipefail
+          
           VERSION="${{ inputs.tag_name }}"
           
-          EXT=""
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            EXT=".exe"
-          fi
+          targets=(
+            "linux amd64"
+            "linux arm64"
+            "darwin arm64"
+            "windows amd64 .exe"
+          )
           
-          # Dynamically set the binary name based on OS and architecture
-          BINARY_NAME_ARCH="${GITHUB_REPOSITORY##*/}-${{ matrix.os }}-${{ matrix.arch }}${EXT}"
-          echo "binary_name_arch=${BINARY_NAME_ARCH}" >> "${GITHUB_OUTPUT}"
-          echo "binary_name=${GITHUB_REPOSITORY##*/}" >> ${GITHUB_OUTPUT}
+          for t in "${targets[@]}"; do
+            read -r GOOS GOARCH EXT <<<"$t"
+            EXT="${EXT:-}"
           
-          echo "Building ${BINARY_NAME_ARCH} with version ${VERSION}"
+            BINARY_NAME_ARCH="${{ github.event.repository.name }}-${GOOS}-${GOARCH}${EXT}"
           
-          # Build the Go binary with version information embedded via -ldflags
-          go build -ldflags "-X github.com/magenx/${GITHUB_REPOSITORY##*/}/pkg/version.Version=${VERSION} -s -w" -o "${BINARY_NAME_ARCH}" ./cmd/${GITHUB_REPOSITORY##*/}
+            echo "==> Building ${BINARY_NAME_ARCH} (GOOS=${GOOS} GOARCH=${GOARCH}) version=${VERSION}"
+            GOOS="${GOOS}" GOARCH="${GOARCH}" \
+              go build -ldflags "-X github.com/magenx/${{ github.event.repository.name }}/pkg/version.Version=${VERSION} -s -w" \
+              -o "${BINARY_NAME_ARCH}" "./cmd/${{ github.event.repository.name }}"
           
-          # Check if the binary was successfully built
-          if [ ! -f "${BINARY_NAME_ARCH}" ]; then
-            echo "Error: Build failed. Binary not found!"
-            exit 1
-          fi
-
-          # Generate and tore checksum for the final job to pick up
-          sha256sum "${BINARY_NAME_ARCH}" > "${BINARY_NAME_ARCH}.sha256"
+            test -f "${BINARY_NAME_ARCH}"
+            sha256sum "${BINARY_NAME_ARCH}" > "${BINARY_NAME_ARCH}.sha256"
+          done
 
       - name: Upload build artifacts
         id: upload
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: release-${{ matrix.os }}-${{ matrix.arch }}
+          name: release-${{ inputs.tag_name }}-artifacts
           path: |
-            ${{ steps.build.outputs.binary_name_arch }}
-            ${{ steps.build.outputs.binary_name_arch }}.sha256
+            ${{ github.event.repository.name }}-*
+            ${{ github.event.repository.name }}-*.sha256
           if-no-files-found: error
           retention-days: 1
 
