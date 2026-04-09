@@ -153,11 +153,11 @@ func (t *ToolInstaller) IsWingetInstalled() bool {
 	return err == nil
 }
 
-// InstallBrew installs Homebrew on macOS using the official installation script.
+// InstallBrew installs Homebrew on macOS | Linux using the official installation script.
 func (t *ToolInstaller) InstallBrew() error {
-	if runtime.GOOS != "darwin" {
-		return fmt.Errorf("Homebrew installation is only supported on macOS")
-	}
+	//if runtime.GOOS != "darwin" {
+	//	return fmt.Errorf("Homebrew installation is only supported on macOS")
+	//}
 
 	fmt.Println("Installing Homebrew package manager...")
 
@@ -181,7 +181,7 @@ func (t *ToolInstaller) InstallBrew() error {
 // tool installation requires a native package manager.
 func (t *ToolInstaller) EnsurePackageManager() error {
 	switch runtime.GOOS {
-	case "darwin":
+	case "darwin", "linux":
 		if !t.IsBrewInstalled() {
 			fmt.Println("Homebrew not found. Installing Homebrew...")
 			if err := t.InstallBrew(); err != nil {
@@ -239,7 +239,7 @@ func (t *ToolInstaller) installWithWinget(packageID string) error {
 // current OS. Returns an error on unsupported platforms.
 func (t *ToolInstaller) installTool(toolName string) error {
 	switch runtime.GOOS {
-	case "darwin":
+	case "darwin", "linux":
 		formula, ok := brewTools[toolName]
 		if !ok {
 			return fmt.Errorf("no Homebrew formula defined for tool %q", toolName)
@@ -289,7 +289,7 @@ func (t *ToolInstaller) InstallHelm() error {
 func (t *ToolInstaller) InstallKubectlAI() error {
 	fmt.Println("Installing kubectl-ai...")
 	switch runtime.GOOS {
-	case "darwin":
+	case "darwin", "linux":
 		return t.installWithBrew(brewTools["kubectl-ai"])
 	case "windows":
 		fmt.Println("Installing krew via winget...")
