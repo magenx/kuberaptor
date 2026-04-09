@@ -7,6 +7,7 @@ package util
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -38,13 +39,15 @@ func TestWriteToFile_CreatesParentDirectory(t *testing.T) {
 		t.Errorf("File content mismatch. Expected: %s, Got: %s", testData, content)
 	}
 
-	// Verify file permissions
+	// Verify file permissions (POSIX only; Windows does not honour these bits)
 	info, err := os.Stat(testPath)
 	if err != nil {
 		t.Fatalf("Failed to stat file: %v", err)
 	}
-	if info.Mode().Perm() != 0600 {
-		t.Errorf("File permissions mismatch. Expected: 0600, Got: %o", info.Mode().Perm())
+	if runtime.GOOS != "windows" {
+		if info.Mode().Perm() != 0600 {
+			t.Errorf("File permissions mismatch. Expected: 0600, Got: %o", info.Mode().Perm())
+		}
 	}
 }
 
@@ -133,13 +136,15 @@ clusters:
 		t.Errorf(".kube directory was not created at %s", kubeDir)
 	}
 
-	// Verify directory permissions (should be 0755)
+	// Verify directory permissions (POSIX only; Windows does not honour these bits)
 	dirInfo, err := os.Stat(kubeDir)
 	if err != nil {
 		t.Fatalf("Failed to stat .kube directory: %v", err)
 	}
-	if dirInfo.Mode().Perm() != 0755 {
-		t.Errorf("Directory permissions mismatch. Expected: 0755, Got: %o", dirInfo.Mode().Perm())
+	if runtime.GOOS != "windows" {
+		if dirInfo.Mode().Perm() != 0755 {
+			t.Errorf("Directory permissions mismatch. Expected: 0755, Got: %o", dirInfo.Mode().Perm())
+		}
 	}
 
 	// Verify the kubeconfig file was created

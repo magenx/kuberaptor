@@ -1,6 +1,7 @@
 # Build artifacts
 dist/
 coverage.out
+.out/
 
 # Binary
 /kuberaptor

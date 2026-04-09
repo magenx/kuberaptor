@@ -38,7 +38,7 @@ networking:
 
   private_network:
     enabled: true
-    subnet: 10.0.0.0/16
+    subnet: "10.0.0.0/16"
 
   cni:
     enabled: true
