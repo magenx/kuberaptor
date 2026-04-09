@@ -521,10 +521,12 @@ func (v *Validator) validateLoadBalancer() {
 
 // validateExternalTools validates that required external tools are available
 func (v *Validator) validateExternalTools() {
-	// Note: External tools (kubectl, helm) are now automatically installed
-	// by the tool installer before cluster operations, so we don't need to
-	// treat missing tools as errors here. This method is kept for potential
-	// future validation needs.
+	// Cilium CLI must be pre-installed by the user; it is not managed automatically.
+	if v.config.Networking.CNI.Mode == "cilium" {
+		v.warnings = append(v.warnings,
+			"CNI mode is set to 'cilium': the cilium-cli tool must be pre-installed on your machine. "+
+				"See https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/ for installation instructions.")
+	}
 }
 
 // validateDomain validates the domain format

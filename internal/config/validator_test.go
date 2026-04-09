@@ -531,3 +531,49 @@ func TestValidatePlacementGroup_EmptyLabelKey(t *testing.T) {
 		t.Error("Expected placement_group.labels validation error for empty key")
 	}
 }
+
+func TestValidateExternalTools_CiliumWarning(t *testing.T) {
+	cfg := &Main{
+		ClusterName: "test-cluster",
+		K3sVersion:  "v1.32.0+k3s1",
+		Networking: Networking{
+			CNI: CNI{
+				Mode:   "cilium",
+				Cilium: &Cilium{Enabled: true},
+			},
+		},
+	}
+
+	validator := NewValidator(cfg)
+	validator.validateExternalTools()
+
+	found := false
+	for _, w := range validator.GetWarnings() {
+		if strings.Contains(w, "cilium-cli") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected a warning about cilium-cli when CNI mode is 'cilium'")
+	}
+}
+
+func TestValidateExternalTools_NoCiliumWarningForFlannel(t *testing.T) {
+	cfg := &Main{
+		ClusterName: "test-cluster",
+		K3sVersion:  "v1.32.0+k3s1",
+		Networking: Networking{
+			CNI: CNI{Mode: "flannel"},
+		},
+	}
+
+	validator := NewValidator(cfg)
+	validator.validateExternalTools()
+
+	for _, w := range validator.GetWarnings() {
+		if strings.Contains(w, "cilium") {
+			t.Errorf("Expected no Cilium warning for flannel CNI mode, got: %s", w)
+		}
+	}
+}
