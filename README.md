@@ -1,4 +1,4 @@
-## Kuberaptor - Hetzner K3s Cluster
+## Kuberaptor - [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) K3s Cluster
 > [kube`raptor]
 
 <p align="center">
@@ -9,8 +9,8 @@
 </p>
 
 ## 🎉 Project Status: **WIP**
-### An independent open source project, not affiliated with Hetzner Online GmbH.
-The Kuberaptor project is a Kubernetes cluster management tool written in Go, providing automated cluster creation, management, and operations on Hetzner Cloud infrastructure.  
+### An independent open source project, not affiliated with [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) Online GmbH.
+The Kuberaptor project is a Kubernetes cluster management tool written in Go, providing automated cluster creation, management, and operations on [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) Cloud infrastructure.  
 
 📚 **[Documentation overview](https://deepwiki.com/magenx/kuberaptor)**  
 **[Website](https://www.kuberaptor.com/)**   
@@ -85,8 +85,8 @@ The Kuberaptor project is a Kubernetes cluster management tool written in Go, pr
 
 ### Infrastructure Components
 
-**1. Hetzner Cloud Integration** ✅
-- Official Hetzner Cloud Go SDK v2 integration
+**1. [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) Cloud Integration** ✅
+- Official [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) Cloud Go SDK v2 integration
 - Complete server lifecycle management
 - Network management (creation, deletion, configuration)
 - Firewall management with rule configuration
