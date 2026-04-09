@@ -6,17 +6,12 @@ package util
 
 import (
 	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // brewTools maps logical tool names to their Homebrew formula names (macOS only).
@@ -315,41 +310,33 @@ func (t *ToolInstaller) installHcloudLinux() error {
 		return fmt.Errorf("unsupported architecture for hcloud deb install: %s", arch)
 	}
 
-	// Resolve the latest release tag via GitHub API
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	apiURL := "https://api.github.com/repos/hetznercloud/cli/releases/latest"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	// Resolve the latest release tag by following GitHub's /releases/latest redirect.
+	// curl -L follows the redirect chain; -w %{url_effective} prints the final URL
+	// which ends with /releases/tag/vX.Y.Z.
+	cmd := exec.Command("curl", "-fsSLI", "-o", "/dev/null", "-w", "%{url_effective}",
+		"https://github.com/hetznercloud/cli/releases/latest")
+	out, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("failed to create request for hcloud release info: %w", err)
+		return fmt.Errorf("failed to resolve hcloud latest release URL: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to fetch hcloud latest release info: %w", err)
+	effectiveURL := strings.TrimSpace(string(out))
+	// URL ends with /releases/tag/vX.Y.Z
+	parts := strings.Split(effectiveURL, "/")
+	if len(parts) < 2 {
+		return fmt.Errorf("unexpected redirect URL for hcloud latest release: %s", effectiveURL)
 	}
-	defer resp.Body.Close()
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return fmt.Errorf("failed to parse hcloud release response: %w", err)
-	}
-	if release.TagName == "" {
+	tag := parts[len(parts)-1]
+	if tag == "" {
 		return fmt.Errorf("hcloud latest release tag is empty")
 	}
-	tag := release.TagName
-	// Strip leading 'v' for the filename (e.g. v1.47.0 -> 1.47.0)
 	version := strings.TrimPrefix(tag, "v")
 
 	debFile := fmt.Sprintf("hcloud-linux-%s.deb", debArch)
 	downloadURL := fmt.Sprintf("https://github.com/hetznercloud/cli/releases/download/%s/%s", tag, debFile)
+	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
 
 	fmt.Printf("Downloading hcloud %s (%s)...\n", tag, debArch)
-
-	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
-	if err := t.downloadFile(tmpPath, downloadURL); err != nil {
+	if err := t.runCommand("curl", "-fsSL", "-o", tmpPath, downloadURL); err != nil {
 		return fmt.Errorf("failed to download hcloud deb package: %w", err)
 	}
 	defer os.Remove(tmpPath)
@@ -360,37 +347,6 @@ func (t *ToolInstaller) installHcloudLinux() error {
 	}
 
 	fmt.Printf("✓ hcloud %s installed successfully\n", version)
-	return nil
-}
-
-// downloadFile downloads a URL to a local file path.
-func (t *ToolInstaller) downloadFile(dest, url string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create download request: %w", err)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("HTTP GET %s failed: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode)
-	}
-
-	f, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("failed to create file %s: %w", dest, err)
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		return fmt.Errorf("failed to write file %s: %w", dest, err)
-	}
 	return nil
 }
 
