@@ -6,22 +6,25 @@ package util
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
-// brewTools maps logical tool names to their Homebrew formula names.
+// brewTools maps logical tool names to their Homebrew formula names (macOS only).
 var brewTools = map[string]string{
 	"hcloud":     "hcloud",
 	"helm":       "helm",
 	"kubectl":    "kubernetes-cli",
 	"kubectl-ai": "kubectl-ai",
-	"cilium":     "cilium-cli",
-	"flux":       "fluxcd/tap/flux",
 }
 
 // wingetTools maps logical tool names to their winget package IDs.
@@ -30,15 +33,18 @@ var wingetTools = map[string]string{
 	"hcloud":  "HetznerCloud.CLI",
 	"helm":    "Helm.Helm",
 	"kubectl": "Kubernetes.kubectl",
-	"cilium":  "Cilium.CiliumCLI",
-	"flux":    "FluxCD.Flux",
+}
+
+// snapTools maps logical tool names to their snap package names on Linux.
+var snapTools = map[string]string{
+	"kubectl": "kubectl",
+	"helm":    "helm",
 }
 
 // ToolInstaller handles detection and installation of required tools
 type ToolInstaller struct {
 	kubectlVersion string
 	helmVersion    string
-	ciliumVersion  string
 }
 
 // NewToolInstaller creates a new tool installer with versions
@@ -51,7 +57,6 @@ func NewToolInstaller(k3sVersion string) (*ToolInstaller, error) {
 	return &ToolInstaller{
 		kubectlVersion: kubectlVersion,
 		helmVersion:    "", // Helm version determined by the package manager
-		ciliumVersion:  "", // Cilium CLI version determined by the package manager
 	}, nil
 }
 
@@ -83,11 +88,6 @@ func (t *ToolInstaller) SetHelmVersion(version string) {
 	t.helmVersion = version
 }
 
-// SetCiliumVersion allows setting a custom cilium CLI version
-func (t *ToolInstaller) SetCiliumVersion(version string) {
-	t.ciliumVersion = version
-}
-
 // GetKubectlVersion returns the kubectl version that will be installed
 func (t *ToolInstaller) GetKubectlVersion() string {
 	return t.kubectlVersion
@@ -96,11 +96,6 @@ func (t *ToolInstaller) GetKubectlVersion() string {
 // GetHelmVersion returns the helm version that will be installed
 func (t *ToolInstaller) GetHelmVersion() string {
 	return t.helmVersion
-}
-
-// GetCiliumVersion returns the cilium CLI version that will be installed
-func (t *ToolInstaller) GetCiliumVersion() string {
-	return t.ciliumVersion
 }
 
 // IsHcloudInstalled checks if the hcloud CLI is available
@@ -129,18 +124,6 @@ func (t *ToolInstaller) IsKubectlAIInstalled() bool {
 	return err == nil
 }
 
-// IsCiliumInstalled checks if cilium CLI is available
-func (t *ToolInstaller) IsCiliumInstalled() bool {
-	_, err := exec.LookPath("cilium")
-	return err == nil
-}
-
-// IsFluxInstalled checks if the Flux CLI is available
-func (t *ToolInstaller) IsFluxInstalled() bool {
-	_, err := exec.LookPath("flux")
-	return err == nil
-}
-
 // IsBrewInstalled checks if Homebrew is available (macOS)
 func (t *ToolInstaller) IsBrewInstalled() bool {
 	_, err := exec.LookPath("brew")
@@ -153,11 +136,11 @@ func (t *ToolInstaller) IsWingetInstalled() bool {
 	return err == nil
 }
 
-// InstallBrew installs Homebrew on macOS | Linux using the official installation script.
+// InstallBrew installs Homebrew on macOS using the official installation script.
 func (t *ToolInstaller) InstallBrew() error {
-	//if runtime.GOOS != "darwin" {
-	//	return fmt.Errorf("Homebrew installation is only supported on macOS")
-	//}
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("Homebrew installation is only supported on macOS")
+	}
 
 	fmt.Println("Installing Homebrew package manager...")
 
@@ -175,13 +158,36 @@ func (t *ToolInstaller) InstallBrew() error {
 	return nil
 }
 
+// IsSnapdInstalled checks if snapd is available (Linux)
+func (t *ToolInstaller) IsSnapdInstalled() bool {
+	_, err := exec.LookPath("snap")
+	return err == nil
+}
+
+// InstallSnapd installs snapd on Debian/Ubuntu-based Linux systems.
+func (t *ToolInstaller) InstallSnapd() error {
+	fmt.Println("snapd not found. Installing snapd...")
+	if err := t.runCommand("apt-get", "update"); err != nil {
+		return fmt.Errorf("apt-get update failed: %w", err)
+	}
+	if err := t.runCommand("apt-get", "install", "-y", "snapd"); err != nil {
+		return fmt.Errorf("apt-get install snapd failed: %w", err)
+	}
+	if err := t.runCommand("snap", "install", "snapd"); err != nil {
+		return fmt.Errorf("snap install snapd failed: %w", err)
+	}
+	fmt.Println("✓ snapd installed successfully")
+	return nil
+}
+
 // EnsurePackageManager detects the current OS and ensures the appropriate
-// package manager (brew on macOS, winget on Windows) is available.
-// Returns an error on Linux and other unsupported platforms since automatic
-// tool installation requires a native package manager.
+// package manager is available:
+//   - macOS: Homebrew (brew)
+//   - Linux: snapd (snap)
+//   - Windows: winget
 func (t *ToolInstaller) EnsurePackageManager() error {
 	switch runtime.GOOS {
-	case "darwin", "linux":
+	case "darwin":
 		if !t.IsBrewInstalled() {
 			fmt.Println("Homebrew not found. Installing Homebrew...")
 			if err := t.InstallBrew(); err != nil {
@@ -190,6 +196,14 @@ func (t *ToolInstaller) EnsurePackageManager() error {
 			fmt.Println("✓ Homebrew installed successfully")
 		} else {
 			fmt.Println("✓ Homebrew is already installed")
+		}
+	case "linux":
+		if !t.IsSnapdInstalled() {
+			if err := t.InstallSnapd(); err != nil {
+				return fmt.Errorf("failed to install snapd: %w", err)
+			}
+		} else {
+			fmt.Println("✓ snapd is already installed")
 		}
 	case "windows":
 		if !t.IsWingetInstalled() {
@@ -200,8 +214,8 @@ func (t *ToolInstaller) EnsurePackageManager() error {
 		fmt.Println("✓ winget is already installed")
 	default:
 		return fmt.Errorf(
-			"automatic tool installation is only supported on macOS (Homebrew) and Windows (winget). "+
-				"On %s, please install the required tools manually: hcloud, kubectl, helm, kubectl-ai, cilium",
+			"automatic tool installation is only supported on macOS (Homebrew), Linux (snapd), and Windows (winget). "+
+				"On %s, please install the required tools manually: hcloud, kubectl, helm, kubectl-ai",
 			runtime.GOOS,
 		)
 	}
@@ -235,16 +249,32 @@ func (t *ToolInstaller) installWithWinget(packageID string) error {
 	return nil
 }
 
+// installWithSnap installs a snap package using --classic confinement.
+func (t *ToolInstaller) installWithSnap(packageName string) error {
+	fmt.Printf("Installing %s via snap...\n", packageName)
+	if err := t.runCommand("snap", "install", packageName, "--classic"); err != nil {
+		return fmt.Errorf("snap install %s failed: %w", packageName, err)
+	}
+	fmt.Printf("✓ %s installed successfully via snap\n", packageName)
+	return nil
+}
+
 // installTool installs a named tool using the native package manager for the
 // current OS. Returns an error on unsupported platforms.
 func (t *ToolInstaller) installTool(toolName string) error {
 	switch runtime.GOOS {
-	case "darwin", "linux":
+	case "darwin":
 		formula, ok := brewTools[toolName]
 		if !ok {
 			return fmt.Errorf("no Homebrew formula defined for tool %q", toolName)
 		}
 		return t.installWithBrew(formula)
+	case "linux":
+		pkg, ok := snapTools[toolName]
+		if !ok {
+			return fmt.Errorf("no snap package defined for tool %q", toolName)
+		}
+		return t.installWithSnap(pkg)
 	case "windows":
 		pkgID, ok := wingetTools[toolName]
 		if !ok {
@@ -261,14 +291,112 @@ func (t *ToolInstaller) installTool(toolName string) error {
 
 // InstallHcloud installs the hcloud CLI.
 // macOS: brew install hcloud
+// Linux: download and install the latest deb package from GitHub releases
 // Windows: winget install -e --id HetznerCloud.CLI
 func (t *ToolInstaller) InstallHcloud() error {
 	fmt.Println("Installing hcloud CLI...")
+	if runtime.GOOS == "linux" {
+		return t.installHcloudLinux()
+	}
 	return t.installTool("hcloud")
+}
+
+// installHcloudLinux downloads and installs the latest hcloud deb package
+// from GitHub releases, choosing the correct architecture variant.
+func (t *ToolInstaller) installHcloudLinux() error {
+	arch := runtime.GOARCH
+	var debArch string
+	switch arch {
+	case "amd64":
+		debArch = "amd64"
+	case "arm64":
+		debArch = "arm64"
+	default:
+		return fmt.Errorf("unsupported architecture for hcloud deb install: %s", arch)
+	}
+
+	// Resolve the latest release tag via GitHub API
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	apiURL := "https://api.github.com/repos/hetznercloud/cli/releases/latest"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request for hcloud release info: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to fetch hcloud latest release info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var release struct {
+		TagName string `json:"tag_name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return fmt.Errorf("failed to parse hcloud release response: %w", err)
+	}
+	if release.TagName == "" {
+		return fmt.Errorf("hcloud latest release tag is empty")
+	}
+	tag := release.TagName
+	// Strip leading 'v' for the filename (e.g. v1.47.0 -> 1.47.0)
+	version := strings.TrimPrefix(tag, "v")
+
+	debFile := fmt.Sprintf("hcloud-linux-%s.deb", debArch)
+	downloadURL := fmt.Sprintf("https://github.com/hetznercloud/cli/releases/download/%s/%s", tag, debFile)
+
+	fmt.Printf("Downloading hcloud %s (%s)...\n", tag, debArch)
+
+	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
+	if err := t.downloadFile(tmpPath, downloadURL); err != nil {
+		return fmt.Errorf("failed to download hcloud deb package: %w", err)
+	}
+	defer os.Remove(tmpPath)
+
+	fmt.Printf("Installing hcloud %s...\n", version)
+	if err := t.runCommand("dpkg", "-i", tmpPath); err != nil {
+		return fmt.Errorf("dpkg install of hcloud failed: %w", err)
+	}
+
+	fmt.Printf("✓ hcloud %s installed successfully\n", version)
+	return nil
+}
+
+// downloadFile downloads a URL to a local file path.
+func (t *ToolInstaller) downloadFile(dest, url string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create download request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("HTTP GET %s failed: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP GET %s returned status %d", url, resp.StatusCode)
+	}
+
+	f, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %w", dest, err)
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		return fmt.Errorf("failed to write file %s: %w", dest, err)
+	}
+	return nil
 }
 
 // InstallKubectl installs kubectl.
 // macOS: brew install kubernetes-cli
+// Linux: snap install kubectl --classic
 // Windows: winget install -e --id Kubernetes.kubectl
 func (t *ToolInstaller) InstallKubectl() error {
 	fmt.Printf("Installing kubectl...\n")
@@ -277,6 +405,7 @@ func (t *ToolInstaller) InstallKubectl() error {
 
 // InstallHelm installs Helm.
 // macOS: brew install helm
+// Linux: snap install helm --classic
 // Windows: winget install -e --id Helm.Helm
 func (t *ToolInstaller) InstallHelm() error {
 	fmt.Println("Installing helm...")
@@ -285,12 +414,17 @@ func (t *ToolInstaller) InstallHelm() error {
 
 // InstallKubectlAI installs kubectl-ai.
 // macOS: brew install kubectl-ai
+// Linux: brew is not available; kubectl-ai must be installed manually
 // Windows: winget install -e --id Kubernetes.krew, then kubectl krew install ai
 func (t *ToolInstaller) InstallKubectlAI() error {
 	fmt.Println("Installing kubectl-ai...")
 	switch runtime.GOOS {
-	case "darwin", "linux":
+	case "darwin":
 		return t.installWithBrew(brewTools["kubectl-ai"])
+	case "linux":
+		fmt.Println("⚠ kubectl-ai automatic installation is not supported on Linux via snap.")
+		fmt.Println("  Please install kubectl-ai manually: https://github.com/GoogleCloudPlatform/kubectl-ai")
+		return nil
 	case "windows":
 		fmt.Println("Installing krew via winget...")
 		if err := t.installWithWinget("Kubernetes.krew"); err != nil {
@@ -310,32 +444,14 @@ func (t *ToolInstaller) InstallKubectlAI() error {
 	}
 }
 
-// InstallCilium installs the Cilium CLI.
-// macOS: brew install cilium-cli
-// Windows: winget install -e --id Cilium.CiliumCLI
-func (t *ToolInstaller) InstallCilium() error {
-	fmt.Println("Installing cilium CLI...")
-	return t.installTool("cilium")
-}
-
-// InstallFlux installs the Flux CLI.
-// macOS: brew install fluxcd/tap/flux
-// Windows: winget install -e --id FluxCD.Flux
-func (t *ToolInstaller) InstallFlux() error {
-	fmt.Println("Installing flux CLI...")
-	return t.installTool("flux")
-}
-
 // EnsureToolsInstalled ensures the package manager is available and then checks
-// and installs hcloud CLI, kubectl, helm, kubectl-ai, cilium CLI, and flux CLI if needed.
+// and installs hcloud CLI, kubectl, helm, and kubectl-ai if needed.
 // Tools are installed in the following order:
-// 1. Package manager (brew on macOS, winget on Windows)
+// 1. Package manager (brew on macOS, snapd on Linux, winget on Windows)
 // 2. hcloud     - Hetzner Cloud CLI
 // 3. kubectl    - Kubernetes command-line tool
 // 4. helm       - Kubernetes package manager
 // 5. kubectl-ai - AI-powered kubectl assistant
-// 6. cilium     - Cilium CNI CLI tool
-// 7. flux       - Flux GitOps CLI tool
 func (t *ToolInstaller) EnsureToolsInstalled() error {
 	// Ensure the appropriate package manager is available first
 	if err := t.EnsurePackageManager(); err != nil {
@@ -374,22 +490,6 @@ func (t *ToolInstaller) EnsureToolsInstalled() error {
 		}
 	} else {
 		fmt.Println("✓ kubectl-ai is already installed")
-	}
-
-	if !t.IsCiliumInstalled() {
-		if err := t.InstallCilium(); err != nil {
-			errors = append(errors, fmt.Sprintf("cilium: %v", err))
-		}
-	} else {
-		fmt.Println("✓ cilium CLI is already installed")
-	}
-
-	if !t.IsFluxInstalled() {
-		if err := t.InstallFlux(); err != nil {
-			errors = append(errors, fmt.Sprintf("flux: %v", err))
-		}
-	} else {
-		fmt.Println("✓ flux CLI is already installed")
 	}
 
 	if len(errors) > 0 {
