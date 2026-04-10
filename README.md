@@ -322,9 +322,10 @@ image: &image debian-13       # Optional: node OS image with &image yaml anchor
 autoscaling_image: *image     # Optional: autoscaler node OS image with *image yaml anchor
 
 # Advanced Cluster Settings (Optional)
+# Global protection parameter - if true: all resources deletion protection enabled in Hetzner and local cluster delete command
+protect_against_deletion: true                    # Prevent accidental deletion (default: true)
 schedule_workloads_on_masters: false              # Allow workloads on master nodes (default: false)
 include_instance_type_in_instance_name: false     # Include instance type in names (default: false)
-protect_against_deletion: true                    # Prevent accidental deletion (default: true)
 k3s_upgrade_concurrency: 1                        # Number of nodes to upgrade in parallel (default: 1)
 grow_root_partition_automatically: true           # Auto-grow root partition (default: true)
 
