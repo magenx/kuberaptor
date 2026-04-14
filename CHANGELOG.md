@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0-rc.19](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.18...v1.1.0-rc.19) (2026-04-14)
+
+
+### 🛠️ Refactoring
+
+* **tests:** Improve unit test coverage across core packages (23.2% → 27.4%) ([#152](https://github.com/magenx/kuberaptor/issues/152)) ([b366632](https://github.com/magenx/kuberaptor/commit/b3666322ed7d3177a6346ce5604ea25bf023f45f))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump golang.org/x/crypto from 0.49.0 to 0.50.0 ([#155](https://github.com/magenx/kuberaptor/issues/155)) ([017c5d5](https://github.com/magenx/kuberaptor/commit/017c5d51db91eaeabb3c42d36cae2b3967a2ea66))
+* Enhance build workflow with error handling and checksums ([#153](https://github.com/magenx/kuberaptor/issues/153)) ([ca8a0a0](https://github.com/magenx/kuberaptor/commit/ca8a0a0eb7b1523d46806b032bf96256bec0f7d4))
+* **readme:** Add global protection parameter to README ([#154](https://github.com/magenx/kuberaptor/issues/154)) ([8e7b69c](https://github.com/magenx/kuberaptor/commit/8e7b69cad5fea9e6a633e4abd6e64c19077aa358))
+* **workflow:** Update release-please-action to version 4.4.1 ([#156](https://github.com/magenx/kuberaptor/issues/156)) ([5a825aa](https://github.com/magenx/kuberaptor/commit/5a825aaddf5bf7d9c31e682617506e005907fa5c))
+
 ## [1.1.0-rc.18](https://github.com/magenx/kuberaptor/compare/v1.1.0-rc.17...v1.1.0-rc.18) (2026-04-09)
 
 
