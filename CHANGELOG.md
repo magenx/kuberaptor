@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0-rc.1](https://github.com/magenx/kuberaptor/compare/v1.2.0-rc...v1.2.0-rc.1) (2026-04-14)
+
+
+### 🚦 Maintenance
+
+* Add force-tag-creation option to prerelease config ([#163](https://github.com/magenx/kuberaptor/issues/163)) ([6c71234](https://github.com/magenx/kuberaptor/commit/6c71234d3782210c695307d3631c6705d2bf0272))
+* Enable force tag creation in release config ([#162](https://github.com/magenx/kuberaptor/issues/162)) ([de336d7](https://github.com/magenx/kuberaptor/commit/de336d711690d6d9003b3d522fcd406609db3da4))
+* Fix comment grammar in shell_test.go ([#164](https://github.com/magenx/kuberaptor/issues/164)) ([f5613c6](https://github.com/magenx/kuberaptor/commit/f5613c692c1871b22084ecd64d731eef1919d25b))
+
 ## [1.2.0-rc](https://github.com/magenx/kuberaptor/compare/v1.1.0...v1.2.0-rc) (2026-04-14)
 
 
