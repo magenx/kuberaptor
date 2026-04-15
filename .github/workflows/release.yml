@@ -102,12 +102,12 @@ jobs:
 
   build_release:
     name: Build & upload artifacts to stable release draft
-    needs: release
-    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    needs: pre_release
+    if: ${{ needs.pre_release.outputs.releases_created == 'true' && !contains(needs.pre_release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/build_for_release.yml
     with:
-      tag_name: ${{ needs.release.outputs.tag_name }}
-      sha: ${{ needs.release.outputs.sha }}
+      tag_name: ${{ needs.pre_release.outputs.tag_name }}
+      sha: ${{ needs.pre_release.outputs.sha }}
       prerelease: false
     secrets:
       KUBERAPTOR_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
@@ -115,7 +115,6 @@ jobs:
   publish_release:
     name: Publish stable release (draft -> published)
     needs: [release, build_release]
-    if: ${{ needs.release.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Mark stable release as published
