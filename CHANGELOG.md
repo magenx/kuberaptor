@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2-rc](https://github.com/magenx/kuberaptor/compare/v1.2.1...v1.2.2-rc) (2026-04-15)
+
+
+### 🚦 Maintenance
+
+* Fix comment grammar in shell_test.go ([#172](https://github.com/magenx/kuberaptor/issues/172)) ([8979bbf](https://github.com/magenx/kuberaptor/commit/8979bbf1d3efd27643e8ddd768d9d7c1d8005246))
+
 ## [1.2.1](https://github.com/magenx/kuberaptor/compare/v1.2.0...v1.2.1) (2026-04-15)
 
 
