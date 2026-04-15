@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.3](https://github.com/magenx/kuberaptor/compare/v1.2.2...v1.2.3) (2026-04-15)
+
+
+### 🚦 Maintenance
+
+* Fix comment grammar in shell_test.go ([#178](https://github.com/magenx/kuberaptor/issues/178)) ([b69e060](https://github.com/magenx/kuberaptor/commit/b69e060aa36d89511c8bee829d69bc1adfa68564))
+* **main:** kuberaptor 1.2.3-rc ([#179](https://github.com/magenx/kuberaptor/issues/179)) ([616c6b8](https://github.com/magenx/kuberaptor/commit/616c6b848cecf09d1427a6c3fe681c1c0934b67a))
+
 ## [1.2.3-rc](https://github.com/magenx/kuberaptor/compare/v1.2.2...v1.2.3-rc) (2026-04-15)
 
 
