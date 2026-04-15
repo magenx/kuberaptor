@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/magenx/kuberaptor/compare/v1.2.0...v1.2.1) (2026-04-15)
+
+
+### 🚦 Maintenance
+
+* **main:** kuberaptor 1.2.1-rc ([#168](https://github.com/magenx/kuberaptor/issues/168)) ([cdfbe7f](https://github.com/magenx/kuberaptor/commit/cdfbe7f409bcbb0711adeb0dbe733c79c27ff1cc))
+* Release test ([#167](https://github.com/magenx/kuberaptor/issues/167)) ([bfd4437](https://github.com/magenx/kuberaptor/commit/bfd443771c6b0a7875c3a1e17b585aba5d85edd2))
+
 ## [1.2.1-rc](https://github.com/magenx/kuberaptor/compare/v1.2.0...v1.2.1-rc) (2026-04-15)
 
 
