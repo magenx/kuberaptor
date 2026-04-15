@@ -114,13 +114,13 @@ jobs:
 
   publish_release:
     name: Publish stable release (draft -> published)
-    needs: [release, build_release]
+    needs: [pre_release, build_release]
     runs-on: ubuntu-latest
     steps:
       - name: Mark stable release as published
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           token: ${{ secrets.KUBERAPTOR_TOKEN }}
-          tag_name: ${{ needs.release.outputs.tag_name }}
+          tag_name: ${{ needs.pre_release.outputs.tag_name }}
           draft: false
           prerelease: false
