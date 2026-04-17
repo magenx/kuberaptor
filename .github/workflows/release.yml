@@ -100,9 +100,21 @@ jobs:
           config-file: ${{ env.RELEASE_CONFIG }}
           manifest-file: ${{ env.RELEASE_MANIFEST }}
 
+  osv_scan:
+    name: Google osv-scanner
+    needs: pre_release
+    if: ${{ needs.pre_release.outputs.releases_created == 'true' && !contains(needs.pre_release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@c51854704019a247608d928f370c98740469d4b5 # v2.3.5
+    with:
+      ref: ${{ needs.pre_release.outputs.sha }}
+      scan-args: |-
+        ./
+    permissions:
+      security-events: write
+
   build_release:
     name: Build & upload artifacts to stable release draft
-    needs: pre_release
+    needs: [pre_release, osv_scan]
     if: ${{ needs.pre_release.outputs.releases_created == 'true' && !contains(needs.pre_release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: ./.github/workflows/build_for_release.yml
     with:
