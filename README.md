@@ -1,12 +1,7 @@
 ## Kuberaptor - [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) K3s Cluster
 > [kube`raptor]
 
-<p align="center">
-<img width="324" height="170" alt="Hetzner-Logo-Hosted_in_Europe" src="https://github.com/user-attachments/assets/22d71337-fab9-4949-b153-e5614a1f5114" />
-<img width="120" height="130" alt="k3s" src="https://github.com/user-attachments/assets/226f1609-37e1-4b64-b868-9c034840f9fc" />
-<img width="224" height="224" alt="kuberaptor-cardboard" src="https://github.com/user-attachments/assets/fcd1d643-1768-4007-9633-fb5585d03e91" />
-
-</p>
+<img width="324" height="" alt="Hetzner-Logo-Hosted_in_Europe" src="https://github.com/user-attachments/assets/22d71337-fab9-4949-b153-e5614a1f5114" /> <img width="120" height="" alt="k3s" src="https://github.com/user-attachments/assets/226f1609-37e1-4b64-b868-9c034840f9fc" /> <img width="224" height="" alt="kuberaptor-cardboard" src="https://github.com/user-attachments/assets/fcd1d643-1768-4007-9633-fb5585d03e91" />
 
 ## 🎉 Project Status: **WIP**
 ### An independent open source project, not affiliated with [Hetzner](https://hetzner.cloud/?ref=RjVtLXq3rlEz) Online GmbH.
