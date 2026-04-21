@@ -330,7 +330,7 @@ func (t *ToolInstaller) installHcloudLinux() error {
 		return fmt.Errorf("hcloud latest release tag is empty")
 	}
 	version := strings.TrimPrefix(tag, "v")
-
+	// Get latest version hcloud cli hcloud-cli_[1.62.2]_[amd64].deb
 	debFile := fmt.Sprintf("hcloud-cli_%s_%s.deb", version, debArch)
 	downloadURL := fmt.Sprintf("https://github.com/hetznercloud/cli/releases/download/%s/%s", tag, debFile)
 	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
