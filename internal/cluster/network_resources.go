@@ -620,30 +620,33 @@ func (n *NetworkResourceManager) addLabelSelectorTargetWithRetry(lbName string, 
 	)
 
 	retryDelay := initialRetryDelay
-	var lastErr error
+	var err error
 
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		err := n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, opts)
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		err = n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, opts)
 		if err == nil {
 			return nil
 		}
 
-		lastErr = err
-		if !isRetryableLoadBalancerTargetError(err) || attempt == maxRetries-1 {
+		if !isRetryableLoadBalancerTargetError(err) || attempt == maxRetries {
 			return err
 		}
 
 		util.LogInfo(
-			fmt.Sprintf("Target attachment not yet ready for %s in %s, retrying... (attempt %d/%d)", lbName, location, attempt+2, maxRetries),
+			fmt.Sprintf("Target attachment not yet ready for %s in %s, retrying...", lbName, location),
 			"load balancer",
 		)
 
 		time.Sleep(retryDelay)
 
+		// Refresh load balancer state between retries to pick up eventual-consistency updates,
+		// especially network attachment metadata that can lag right after creation.
 		refreshedLB, refreshErr := n.HetznerClient.GetLoadBalancer(n.ctx, lbName)
 		if refreshErr == nil && refreshedLB != nil {
 			lb = refreshedLB
 			if len(refreshedLB.PrivateNet) > 0 {
+				// When a private network is attached, wait briefly so target attachment calls
+				// observe the attachment state consistently across the API backend.
 				time.Sleep(stabilizationDelay)
 			}
 		}
@@ -654,7 +657,7 @@ func (n *NetworkResourceManager) addLabelSelectorTargetWithRetry(lbName string, 
 		}
 	}
 
-	return lastErr
+	return err
 }
 
 func isRetryableLoadBalancerTargetError(err error) bool {
