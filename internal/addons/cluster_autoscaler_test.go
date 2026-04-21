@@ -441,10 +441,12 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 	}
 
 	tests := []struct {
-		name              string
-		poolName          *string
-		locations         []string
-		expectedPoolLabel string
+		name                string
+		poolName            *string
+		locations           []string
+		customHetznerLabels []config.Label
+		expectedPoolLabel   string
+		expectedLabels      map[string]string
 	}{
 		{
 			name:              "pool with custom name - single location",
@@ -464,6 +466,22 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 			locations:         []string{"nbg1", "fsn1"},
 			expectedPoolLabel: "gpu-pool",
 		},
+		{
+			name:      "pool with custom hetzner labels",
+			poolName:  stringPtr("workers"),
+			locations: []string{"hel1"},
+			customHetznerLabels: []config.Label{
+				{Key: "cluster_id", Value: "123456"},
+				{Key: "environment", Value: "production"},
+				{Key: "managed", Value: "custom-override-attempt"},
+			},
+			expectedPoolLabel: "workers",
+			expectedLabels: map[string]string{
+				"cluster_id":  "123456",
+				"environment": "production",
+				"managed":     "kuberaptor",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -481,6 +499,9 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 						Taints: []config.Taint{
 							{Key: "dedicated", Value: "workload", Effect: "NoSchedule"},
 						},
+					},
+					Hetzner: &config.HetznerConfig{
+						Labels: tt.customHetznerLabels,
 					},
 					Autoscaling: &config.Autoscaling{
 						Enabled:      true,
@@ -525,6 +546,9 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 					"pool":     tt.expectedPoolLabel,
 					"location": location,
 					"managed":  "kuberaptor",
+				}
+				for key, value := range tt.expectedLabels {
+					expectedLabels[key] = value
 				}
 
 				for key, expectedValue := range expectedLabels {

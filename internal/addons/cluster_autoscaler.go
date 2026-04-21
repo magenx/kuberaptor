@@ -433,14 +433,20 @@ func (c *ClusterAutoscalerInstaller) buildNodeConfig(pool config.WorkerNodePool,
 		poolName = &defaultName
 	}
 
-	// Autoscaler only supports default labels, not custom Hetzner labels
-	// Custom Hetzner labels are only supported for static worker pools
 	serverLabels := map[string]string{
 		"cluster":  c.Config.ClusterName,
 		"role":     "worker",
 		"pool":     *poolName,
 		"location": location,
 		"managed":  "kuberaptor",
+	}
+
+	// Merge custom Hetzner labels from worker pool configuration.
+	// Keep "managed" reserved so it cannot be overridden.
+	for _, label := range pool.HetznerLabels() {
+		if label.Key != "managed" {
+			serverLabels[label.Key] = label.Value
+		}
 	}
 
 	// Note: We do NOT pass Kubernetes labels and taints to the autoscaler provider
