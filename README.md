@@ -879,12 +879,25 @@ kuberaptor releases --limit 50
 # Calculate estimated monthly cost
 kuberaptor budget --config cluster.yaml
 
-# Shows breakdown of costs for:
-# - Master nodes
-# - Worker nodes  
-# - Load balancers
-# - Network resources
-# - Total estimated monthly cost
+[magenx] Calculating cluster budget
+  CLUSTER BUDGET ESTIMATE  
+
+Servers:
+  magenx-nat-gateway-nbg1                  cx23                 €0.01     €4.75    /month
+  magenx-master-nbg1-1                     cx23                 €0.01     €4.75    /month
+  magenx-worker-varnish-nbg1-1             cx23                 €0.01     €4.75    /month
+
+Load Balancers:
+  magenx-api-lb-nbg1                       lb11                 €0.01     €8.91    /month
+  magenx-magenx-global-lb-nbg1             lb11                 €0.01     €8.91    /month
+
+Firewalls:
+  magenx-firewall                          5 rules              free      free     
+
+Estimated project total: €32.07/month                                       
+
+Note: Prices are shown in EUR including VAT and may vary slightly based on actual usage.
+Additional charges may apply for network traffic above included limits.
 ```
 
 ---
