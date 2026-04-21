@@ -163,7 +163,7 @@ func (n *NetworkResourceManager) createAPILoadBalancerForLocation(masterServers 
 	// Use private IP if network is attached, otherwise use public IP
 	usePrivateIP := shouldAttachToNetwork
 
-	err = n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
+	err = n.addLabelSelectorTargetWithRetry(lbName, lb, location, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
 		Selector:     labelSelector,
 		UsePrivateIP: hcloud.Ptr(usePrivateIP),
 	})
@@ -454,7 +454,7 @@ func (n *NetworkResourceManager) createGlobalLoadBalancerForLocation(network *hc
 		// Add a separate label selector target for each pool in this location
 		for _, poolName := range n.Config.LoadBalancer.TargetPools {
 			labelSelector := fmt.Sprintf("pool=%s,location=%s", poolName, location)
-			err = n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
+			err = n.addLabelSelectorTargetWithRetry(lbName, lb, location, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
 				Selector:     labelSelector,
 				UsePrivateIP: hcloud.Ptr(usePrivateIP),
 			})
@@ -465,7 +465,7 @@ func (n *NetworkResourceManager) createGlobalLoadBalancerForLocation(network *hc
 	} else {
 		// Default to all worker nodes in the cluster for this location only
 		labelSelector := fmt.Sprintf("role=worker,cluster=%s,location=%s", n.Config.ClusterName, location)
-		err = n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
+		err = n.addLabelSelectorTargetWithRetry(lbName, lb, location, hcloud.LoadBalancerAddLabelSelectorTargetOpts{
 			Selector:     labelSelector,
 			UsePrivateIP: hcloud.Ptr(usePrivateIP),
 		})
@@ -609,6 +609,63 @@ func (n *NetworkResourceManager) CreateSSLCertificate() (*hcloud.Certificate, er
 	util.LogInfo("The certificate will be automatically validated via DNS records in your DNS zone", "ssl")
 
 	return cert, nil
+}
+
+func (n *NetworkResourceManager) addLabelSelectorTargetWithRetry(lbName string, lb *hcloud.LoadBalancer, location string, opts hcloud.LoadBalancerAddLabelSelectorTargetOpts) error {
+	const (
+		maxRetries         = 6
+		initialRetryDelay  = 2 * time.Second
+		maxRetryDelay      = 20 * time.Second
+		stabilizationDelay = 3 * time.Second
+	)
+
+	retryDelay := initialRetryDelay
+	var lastErr error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		err := n.HetznerClient.AddLabelSelectorTargetToLoadBalancer(n.ctx, lb, opts)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		if !isRetryableLoadBalancerTargetError(err) || attempt == maxRetries-1 {
+			return err
+		}
+
+		util.LogInfo(
+			fmt.Sprintf("Target attachment not yet ready for %s in %s, retrying... (attempt %d/%d)", lbName, location, attempt+2, maxRetries),
+			"load balancer",
+		)
+
+		time.Sleep(retryDelay)
+
+		refreshedLB, refreshErr := n.HetznerClient.GetLoadBalancer(n.ctx, lbName)
+		if refreshErr == nil && refreshedLB != nil {
+			lb = refreshedLB
+			if len(refreshedLB.PrivateNet) > 0 {
+				time.Sleep(stabilizationDelay)
+			}
+		}
+
+		retryDelay *= 2
+		if retryDelay > maxRetryDelay {
+			retryDelay = maxRetryDelay
+		}
+	}
+
+	return lastErr
+}
+
+func isRetryableLoadBalancerTargetError(err error) bool {
+	return hcloud.IsError(
+		err,
+		hcloud.ErrorCodeLoadBalancerNotAttachedToNetwork,
+		hcloud.ErrorCodeServerNotAttachedToNetwork,
+		hcloud.ErrorCodeResourceUnavailable,
+		hcloud.ErrorCodeConflict,
+		hcloud.ErrorCodeTimeout,
+	)
 }
 
 // buildAPILoadBalancerLabels builds the Hetzner Cloud labels for an API load balancer

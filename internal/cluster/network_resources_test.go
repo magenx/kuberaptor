@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"github.com/magenx/kuberaptor/internal/config"
 )
 
@@ -228,6 +229,53 @@ func TestGlobalLoadBalancerNaming(t *testing.T) {
 			if lbName != tt.expectedLBName {
 				t.Errorf("%s: lbName = %s, expected %s",
 					tt.description, lbName, tt.expectedLBName)
+			}
+		})
+	}
+}
+
+func TestIsRetryableLoadBalancerTargetError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "load balancer not attached to network",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeLoadBalancerNotAttachedToNetwork, Message: "not attached"},
+			expected: true,
+		},
+		{
+			name:     "server not attached to network",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeServerNotAttachedToNetwork, Message: "server not attached"},
+			expected: true,
+		},
+		{
+			name:     "resource unavailable",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeResourceUnavailable, Message: "resource unavailable"},
+			expected: true,
+		},
+		{
+			name:     "conflict",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeConflict, Message: "conflict"},
+			expected: true,
+		},
+		{
+			name:     "timeout",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeTimeout, Message: "timeout"},
+			expected: true,
+		},
+		{
+			name:     "non-retryable not_found",
+			err:      hcloud.Error{Code: hcloud.ErrorCodeNotFound, Message: "not found"},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if actual := isRetryableLoadBalancerTargetError(tt.err); actual != tt.expected {
+				t.Fatalf("expected %v, got %v", tt.expected, actual)
 			}
 		})
 	}
