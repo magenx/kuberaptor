@@ -331,7 +331,7 @@ func (t *ToolInstaller) installHcloudLinux() error {
 	}
 	version := strings.TrimPrefix(tag, "v")
 
-	debFile := fmt.Sprintf("hcloud-linux-%s.deb", debArch)
+	debFile := fmt.Sprintf("hcloud-cli_%s_%s.deb", version, debArch)
 	downloadURL := fmt.Sprintf("https://github.com/hetznercloud/cli/releases/download/%s/%s", tag, debFile)
 	tmpPath := fmt.Sprintf("/tmp/%s", debFile)
 
