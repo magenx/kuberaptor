@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.6-rc](https://github.com/magenx/kuberaptor/compare/v1.2.5...v1.2.6-rc) (2026-04-21)
+
+
+### 🐛 Bug Fixes
+
+* Clarify hcloud cli download file format ([#196](https://github.com/magenx/kuberaptor/issues/196)) ([c56d060](https://github.com/magenx/kuberaptor/commit/c56d060cf9223bd8505decf8dc16adaed7b2b4cd))
+* Update deb file naming format for hcloud CLI ([#192](https://github.com/magenx/kuberaptor/issues/192)) ([d1bf4c0](https://github.com/magenx/kuberaptor/commit/d1bf4c0659fa133de45a619313ed77691097aec2))
+* Update deb file naming format for hcloud CLI ([#195](https://github.com/magenx/kuberaptor/issues/195)) ([e09065b](https://github.com/magenx/kuberaptor/commit/e09065b80e7fbf710ba882884f6b25f8f127b52d))
+
 ## [1.2.5](https://github.com/magenx/kuberaptor/compare/v1.2.4...v1.2.5) (2026-04-15)
 
 
