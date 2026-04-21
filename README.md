@@ -545,6 +545,18 @@ ssl_certificate:
 
 # Addons installation required for cluster functionality
 addons:
+  kured:
+    enabled: true
+    manifest_url: "https://github.com/kubereboot/kured/releases/download/1.21.0/kured-1.21.0-combined.yaml"
+    kured_options:
+      - "--reboot-command=/usr/bin/systemctl reboot"
+      - "--pre-reboot-node-labels=kured=rebooting"
+      - "--post-reboot-node-labels=kured=done"
+      - "--period=60m"
+      - "--reboot-days=mon,tue,wed,thu,fri,sat,sun"
+      - "--start-time=1am"
+      - "--end-time=8am"
+      - "--time-zone=Europe/Berlin"
   metrics_server:
     enabled: true
   csi_driver:
