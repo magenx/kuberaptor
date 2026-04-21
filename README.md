@@ -17,7 +17,7 @@ The Kuberaptor project is a Kubernetes cluster management tool written in Go, pr
 
 | Metric | Value | Description |
 |--------|-------|-------------|
-| **Language** | **Go 1.24** | Modern, efficient, compiled language |
+| **Language** | **Go 1.26** | Modern, efficient, compiled language |
 | **Startup Time** | **<10ms** | Instant binary startup |
 | **Binary Size** | **~12MB** | Compact single executable |
 | **Build Time** | **~20 sec** | Fast development iteration |
@@ -829,6 +829,13 @@ kuberaptor run --config cluster.yaml \
   --instance mykubic-master-fsn1-1
 ```
 
+### Install Longhorn 
+> https://longhorn.io/docs/1.11.1/deploy/install/
+```
+kuberaptor run  -c cluster.yaml --command "sudo apt-get update && sudo apt-get install -y open-iscsi cryptsetup dmsetup nfs-common"
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.11.1/deploy/longhorn.yaml
+```
+
 ### Upgrade Cluster to New K3s Version
 
 ```bash
@@ -952,7 +959,7 @@ kuberaptor budget --config cluster.yaml
 
 ### Prerequisites
 
-- **Go**: Version 1.24.0 or later
+- **Go**: Version 1.26.0 or later
 - **Make**: For using the Makefile
 - **Git**: For cloning the repository
 
@@ -1086,7 +1093,7 @@ The website source code is in the `ui/` folder and is automatically deployed to 
 **Project:** Kuberaptor  
 **Version:** dev  
 **Status:** WIP  
-**Language:** Go 1.24  
+**Language:** Go 1.26  
 **License:** MIT  
 **Last Updated:** 2026-02-22
 
