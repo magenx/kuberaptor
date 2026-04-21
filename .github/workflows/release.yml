@@ -106,7 +106,6 @@ jobs:
     if: ${{ needs.pre_release.outputs.releases_created == 'true' && !contains(needs.pre_release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@c51854704019a247608d928f370c98740469d4b5 # v2.3.5
     with:
-      ref: ${{ needs.pre_release.outputs.sha }}
       scan-args: |-
         ./
     permissions:
