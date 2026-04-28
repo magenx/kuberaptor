@@ -71,12 +71,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mark pre-release as published
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
-        with:
-          token: ${{ secrets.KUBERAPTOR_TOKEN }}
-          tag_name: ${{ needs.pre_release.outputs.tag_name }}
-          draft: false
-          prerelease: true
+        env:
+          GH_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
+        run: |
+          gh release edit "${{ needs.pre_release.outputs.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --draft=false \
+            --prerelease
 
   release:
     name: Create release PR + draft stable release
@@ -131,9 +132,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Mark stable release as published
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
-        with:
-          token: ${{ secrets.KUBERAPTOR_TOKEN }}
-          tag_name: ${{ needs.pre_release.outputs.tag_name }}
-          draft: false
-          prerelease: false
+        env:
+          GH_TOKEN: ${{ secrets.KUBERAPTOR_TOKEN }}
+        run: |
+          gh release edit "${{ needs.pre_release.outputs.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --draft=false \
+            --prerelease=false
