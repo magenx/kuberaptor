@@ -175,9 +175,9 @@ jobs:
           # Update release with new body and settings
           gh release edit "${{ inputs.tag_name }}" \
             --repo "${{ github.repository }}" \
-            --draft=true \
+            --draft \
             --prerelease=${{ inputs.prerelease }} \
-            --body="$FINAL_BODY"
+            --notes="$FINAL_BODY"
           
           # Upload all assets
           gh release upload "${{ inputs.tag_name }}" ${{ github.event.repository.name }}-* \
