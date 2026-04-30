@@ -1061,6 +1061,26 @@ func (c *CreatorEnhanced) generateK3sAddonFlags() string {
 	return strings.Join(flags, " ")
 }
 
+// buildNetworkingAndSecurityFlags builds networking and secrets encryption flags for k3s server installation
+func buildNetworkingAndSecurityFlags(cfg *config.Main) string {
+	var flags []string
+
+	if cfg.Networking.ClusterDNS != "" {
+		flags = append(flags, fmt.Sprintf("--cluster-dns=%s", cfg.Networking.ClusterDNS))
+	}
+	if cfg.Networking.ClusterDomain != "" {
+		flags = append(flags, fmt.Sprintf("--cluster-domain=%s", cfg.Networking.ClusterDomain))
+	}
+	if cfg.SecretsEncryption != nil && cfg.SecretsEncryption.Enabled {
+		flags = append(flags, "--secrets-encryption")
+		if cfg.SecretsEncryption.Provider != "" {
+			flags = append(flags, fmt.Sprintf("--secrets-encryption-provider=%s", cfg.SecretsEncryption.Provider))
+		}
+	}
+
+	return strings.Join(flags, " ")
+}
+
 // isK3sInstalled checks if k3s is already installed and running on a server
 func (c *CreatorEnhanced) isK3sInstalled(ip string) bool {
 	// Check if k3s service exists and is active
@@ -1267,6 +1287,11 @@ func (c *CreatorEnhanced) installK3sOnMaster(server *hcloud.Server, allMasters [
 		if etcdArgs != "" {
 			baseArgs += " " + etcdArgs
 		}
+	}
+
+	// Add networking and security flags: --cluster-dns, --cluster-domain, --secrets-encryption
+	if networkingSecurityFlags := buildNetworkingAndSecurityFlags(c.Config); networkingSecurityFlags != "" {
+		baseArgs += " " + networkingSecurityFlags
 	}
 
 	// Generate install command using the unified template

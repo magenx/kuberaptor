@@ -10,41 +10,48 @@ import (
 	"path/filepath"
 )
 
+// SecretsEncryption represents secrets encryption at rest configuration for K3s
+type SecretsEncryption struct {
+	Enabled  bool   `yaml:"enabled,omitempty"`
+	Provider string `yaml:"provider,omitempty"`
+}
+
 // Main represents the main configuration structure
 type Main struct {
-	HetznerToken                      string           `yaml:"hetzner_token"`
-	ClusterName                       string           `yaml:"cluster_name"`
-	KubeconfigPath                    string           `yaml:"kubeconfig_path"`
-	K3sVersion                        string           `yaml:"k3s_version"`
-	Domain                            string           `yaml:"domain,omitempty"`
-	APIServerHostname                 string           `yaml:"api_server_hostname,omitempty"`
-	ScheduleWorkloadsOnMasters        bool             `yaml:"schedule_workloads_on_masters,omitempty"`
-	MastersPool                       MasterNodePool   `yaml:"masters_pool"`
-	WorkerNodePools                   []WorkerNodePool `yaml:"worker_node_pools,omitempty"`
-	AdditionalPreK3sCommands          []string         `yaml:"additional_pre_k3s_commands,omitempty"`
-	AdditionalPostK3sCommands         []string         `yaml:"additional_post_k3s_commands,omitempty"`
-	AdditionalPackages                []string         `yaml:"additional_packages,omitempty"`
-	KubeAPIServerArgs                 []string         `yaml:"kube_api_server_args,omitempty"`
-	KubeSchedulerArgs                 []string         `yaml:"kube_scheduler_args,omitempty"`
-	KubeControllerManagerArgs         []string         `yaml:"kube_controller_manager_args,omitempty"`
-	KubeCloudControllerManagerArgs    []string         `yaml:"kube_cloud_controller_manager_args,omitempty"`
-	ClusterAutoscalerArgs             []string         `yaml:"cluster_autoscaler_args,omitempty"`
-	KubeletArgs                       []string         `yaml:"kubelet_args,omitempty"`
-	KubeProxyArgs                     []string         `yaml:"kube_proxy_args,omitempty"`
-	Image                             string           `yaml:"image,omitempty"`
-	AutoscalingImage                  string           `yaml:"autoscaling_image,omitempty"`
-	SnapshotOS                        string           `yaml:"snapshot_os,omitempty"`
-	Networking                        Networking       `yaml:"networking,omitempty"`
-	Datastore                         Datastore        `yaml:"datastore,omitempty"`
-	Addons                            Addons           `yaml:"addons,omitempty"`
-	LoadBalancer                      LoadBalancer     `yaml:"load_balancer,omitempty"`
-	DNSZone                           DNSZone          `yaml:"dns_zone,omitempty"`
-	SSLCertificate                    SSLCertificate   `yaml:"ssl_certificate,omitempty"`
-	IncludeInstanceTypeInInstanceName bool             `yaml:"include_instance_type_in_instance_name,omitempty"`
-	ProtectAgainstDeletion            bool             `yaml:"protect_against_deletion,omitempty"`
-	APILoadBalancer                   APILoadBalancer  `yaml:"api_load_balancer,omitempty"`
-	K3sUpgradeConcurrency             int64            `yaml:"k3s_upgrade_concurrency,omitempty"`
-	GrowRootPartitionAutomatically    bool             `yaml:"grow_root_partition_automatically,omitempty"`
+	HetznerToken                      string             `yaml:"hetzner_token"`
+	ClusterName                       string             `yaml:"cluster_name"`
+	KubeconfigPath                    string             `yaml:"kubeconfig_path"`
+	K3sVersion                        string             `yaml:"k3s_version"`
+	Domain                            string             `yaml:"domain,omitempty"`
+	APIServerHostname                 string             `yaml:"api_server_hostname,omitempty"`
+	ScheduleWorkloadsOnMasters        bool               `yaml:"schedule_workloads_on_masters,omitempty"`
+	MastersPool                       MasterNodePool     `yaml:"masters_pool"`
+	WorkerNodePools                   []WorkerNodePool   `yaml:"worker_node_pools,omitempty"`
+	AdditionalPreK3sCommands          []string           `yaml:"additional_pre_k3s_commands,omitempty"`
+	AdditionalPostK3sCommands         []string           `yaml:"additional_post_k3s_commands,omitempty"`
+	AdditionalPackages                []string           `yaml:"additional_packages,omitempty"`
+	KubeAPIServerArgs                 []string           `yaml:"kube_api_server_args,omitempty"`
+	KubeSchedulerArgs                 []string           `yaml:"kube_scheduler_args,omitempty"`
+	KubeControllerManagerArgs         []string           `yaml:"kube_controller_manager_args,omitempty"`
+	KubeCloudControllerManagerArgs    []string           `yaml:"kube_cloud_controller_manager_args,omitempty"`
+	ClusterAutoscalerArgs             []string           `yaml:"cluster_autoscaler_args,omitempty"`
+	KubeletArgs                       []string           `yaml:"kubelet_args,omitempty"`
+	KubeProxyArgs                     []string           `yaml:"kube_proxy_args,omitempty"`
+	Image                             string             `yaml:"image,omitempty"`
+	AutoscalingImage                  string             `yaml:"autoscaling_image,omitempty"`
+	SnapshotOS                        string             `yaml:"snapshot_os,omitempty"`
+	Networking                        Networking         `yaml:"networking,omitempty"`
+	SecretsEncryption                 *SecretsEncryption `yaml:"secrets_encryption,omitempty"`
+	Datastore                         Datastore          `yaml:"datastore,omitempty"`
+	Addons                            Addons             `yaml:"addons,omitempty"`
+	LoadBalancer                      LoadBalancer       `yaml:"load_balancer,omitempty"`
+	DNSZone                           DNSZone            `yaml:"dns_zone,omitempty"`
+	SSLCertificate                    SSLCertificate     `yaml:"ssl_certificate,omitempty"`
+	IncludeInstanceTypeInInstanceName bool               `yaml:"include_instance_type_in_instance_name,omitempty"`
+	ProtectAgainstDeletion            bool               `yaml:"protect_against_deletion,omitempty"`
+	APILoadBalancer                   APILoadBalancer    `yaml:"api_load_balancer,omitempty"`
+	K3sUpgradeConcurrency             int64              `yaml:"k3s_upgrade_concurrency,omitempty"`
+	GrowRootPartitionAutomatically    bool               `yaml:"grow_root_partition_automatically,omitempty"`
 }
 
 // SetDefaults sets default values for the configuration
