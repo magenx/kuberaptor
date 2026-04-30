@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.3.0-rc](https://github.com/magenx/kuberaptor/compare/v1.2.6-rc...v1.3.0-rc) (2026-04-28)
+
+
+### 🚀 Features
+
+* **autoscaler:** Hetzner server labels into cluster autoscaler ([#207](https://github.com/magenx/kuberaptor/issues/207)) ([8fc0d9c](https://github.com/magenx/kuberaptor/commit/8fc0d9c26b4ec6eee9437c00893ea9233208a802))
+* **autoscaler:** merge worker hetzner labels into autoscaled server labels ([8fc0d9c](https://github.com/magenx/kuberaptor/commit/8fc0d9c26b4ec6eee9437c00893ea9233208a802))
+
+
+### 🛠️ Refactoring
+
+* Harden LB target attachment against Hetzner network-attach propagation races in geo-replicated clusters ([#199](https://github.com/magenx/kuberaptor/issues/199)) ([c19500e](https://github.com/magenx/kuberaptor/commit/c19500ee77e42e3bd90322b8a0c06723eeb52d87))
+
+
+### 📝 Documentation
+
+* **config:** Add kured addon installation details to README ([#200](https://github.com/magenx/kuberaptor/issues/200)) ([8b280d1](https://github.com/magenx/kuberaptor/commit/8b280d1c14660b68af152c5506b071c3d1b65721))
+* **readme:** Enhance budget section with detailed cost estimates ([#202](https://github.com/magenx/kuberaptor/issues/202)) ([6ff5812](https://github.com/magenx/kuberaptor/commit/6ff58127d60d75bbf1630bf961efeb145e924b47))
+* **readme:** Quick Longhorn installation ([#201](https://github.com/magenx/kuberaptor/issues/201)) ([db2e04c](https://github.com/magenx/kuberaptor/commit/db2e04c301eb80c33ceb2a7107848684b94b2125))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([d7e7fa1](https://github.com/magenx/kuberaptor/commit/d7e7fa131d624c261318a188279785a407b1037a))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.37.0 to 2.38.0 ([#203](https://github.com/magenx/kuberaptor/issues/203)) ([d7e7fa1](https://github.com/magenx/kuberaptor/commit/d7e7fa131d624c261318a188279785a407b1037a))
+
 ## [1.2.6-rc](https://github.com/magenx/kuberaptor/compare/v1.2.5...v1.2.6-rc) (2026-04-21)
 
 
