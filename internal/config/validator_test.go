@@ -577,3 +577,37 @@ func TestValidateExternalTools_NoCiliumWarningForFlannel(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateSecretsEncryption_Nil(t *testing.T) {
+cfg := &Main{SecretsEncryption: nil}
+validator := NewValidator(cfg)
+validator.validateSecretsEncryption()
+if len(validator.GetErrors()) != 0 {
+t.Errorf("Expected no errors for nil SecretsEncryption, got: %v", validator.GetErrors())
+}
+}
+
+func TestValidateSecretsEncryption_ValidProviders(t *testing.T) {
+validProviders := []string{"aescbc", "secretbox", ""}
+for _, provider := range validProviders {
+cfg := &Main{SecretsEncryption: &SecretsEncryption{Enabled: true, Provider: provider}}
+validator := NewValidator(cfg)
+validator.validateSecretsEncryption()
+if len(validator.GetErrors()) != 0 {
+t.Errorf("Expected no errors for provider %q, got: %v", provider, validator.GetErrors())
+}
+}
+}
+
+func TestValidateSecretsEncryption_InvalidProvider(t *testing.T) {
+cfg := &Main{SecretsEncryption: &SecretsEncryption{Enabled: true, Provider: "invalid"}}
+validator := NewValidator(cfg)
+validator.validateSecretsEncryption()
+errors := validator.GetErrors()
+if len(errors) == 0 {
+t.Error("Expected validation error for invalid provider, got none")
+}
+if !strings.Contains(errors[0], "invalid provider") {
+t.Errorf("Expected 'invalid provider' in error, got: %s", errors[0])
+}
+}

@@ -25,6 +25,7 @@ type Networking struct {
 	ClusterCIDR     string          `yaml:"cluster_cidr,omitempty"`
 	ServiceCIDR     string          `yaml:"service_cidr,omitempty"`
 	ClusterDNS      string          `yaml:"cluster_dns,omitempty"`
+	ClusterDomain   string          `yaml:"cluster_domain,omitempty"`
 }
 
 // SetDefaults sets default values for networking
@@ -37,6 +38,9 @@ func (n *Networking) SetDefaults() {
 	}
 	if n.ClusterDNS == "" {
 		n.ClusterDNS = "10.43.0.10"
+	}
+	if n.ClusterDomain == "" {
+		n.ClusterDomain = "cluster.local"
 	}
 	n.CNI.SetDefaults()
 	n.PrivateNetwork.SetDefaults()
