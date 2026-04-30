@@ -200,3 +200,33 @@ cni:
 		t.Errorf("Expected nil metrics when not provided, got %v", networking.CNI.Cilium.HubbleMetrics)
 	}
 }
+
+func TestNetworking_SetDefaults_ClusterDomain(t *testing.T) {
+n := &Networking{}
+n.SetDefaults()
+if n.ClusterDomain != "cluster.local" {
+t.Errorf("Expected default ClusterDomain 'cluster.local', got '%s'", n.ClusterDomain)
+}
+}
+
+func TestNetworking_SetDefaults_ClusterDomainPreservesValue(t *testing.T) {
+n := &Networking{ClusterDomain: "custom.domain"}
+n.SetDefaults()
+if n.ClusterDomain != "custom.domain" {
+t.Errorf("Expected ClusterDomain to remain 'custom.domain', got '%s'", n.ClusterDomain)
+}
+}
+
+func TestNetworking_ClusterDomain_UnmarshalYAML(t *testing.T) {
+yamlContent := `
+cluster_domain: "example.local"
+`
+var networking Networking
+err := yaml.Unmarshal([]byte(yamlContent), &networking)
+if err != nil {
+t.Fatalf("Failed to unmarshal YAML: %v", err)
+}
+if networking.ClusterDomain != "example.local" {
+t.Errorf("Expected ClusterDomain 'example.local', got '%s'", networking.ClusterDomain)
+}
+}

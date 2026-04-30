@@ -35,6 +35,7 @@ func (v *Validator) Validate() error {
 	v.validateDomain()
 	v.validateSSHKeys()
 	v.validateNetworking()
+	v.validateSecretsEncryption()
 	v.validateMasterPool()
 	v.validateWorkerPools()
 	v.validateDatastore()
@@ -179,6 +180,29 @@ func (v *Validator) validateNetworking() {
 			v.warnings = append(v.warnings,
 				"Kubernetes API is open to the internet (0.0.0.0/0). Consider restricting access.")
 			break
+		}
+	}
+}
+
+// validateSecretsEncryption validates secrets encryption configuration
+func (v *Validator) validateSecretsEncryption() {
+	if v.config.SecretsEncryption == nil {
+		return
+	}
+
+	if v.config.SecretsEncryption.Provider != "" {
+		validProviders := []string{"aescbc", "secretbox"}
+		isValid := false
+		for _, p := range validProviders {
+			if v.config.SecretsEncryption.Provider == p {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			v.errors = append(v.errors, fmt.Sprintf(
+				"secrets_encryption: invalid provider '%s', must be one of: %s",
+				v.config.SecretsEncryption.Provider, strings.Join(validProviders, ", ")))
 		}
 	}
 }

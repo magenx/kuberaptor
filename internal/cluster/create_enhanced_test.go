@@ -942,3 +942,83 @@ func TestBuildHetznerServerLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildNetworkingAndSecurityFlags_ClusterDNSAndDomain(t *testing.T) {
+cfg := &config.Main{
+Networking: config.Networking{
+ClusterDNS:    "10.43.0.10",
+ClusterDomain: "cluster.local",
+},
+}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if !strings.Contains(flags, "--cluster-dns=10.43.0.10") {
+t.Errorf("Expected --cluster-dns=10.43.0.10 in flags, got: %s", flags)
+}
+if !strings.Contains(flags, "--cluster-domain=cluster.local") {
+t.Errorf("Expected --cluster-domain=cluster.local in flags, got: %s", flags)
+}
+}
+
+func TestBuildNetworkingAndSecurityFlags_SecretsEncryptionEnabled(t *testing.T) {
+cfg := &config.Main{
+SecretsEncryption: &config.SecretsEncryption{
+Enabled: true,
+},
+}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if !strings.Contains(flags, "--secrets-encryption") {
+t.Errorf("Expected --secrets-encryption in flags, got: %s", flags)
+}
+}
+
+func TestBuildNetworkingAndSecurityFlags_SecretsEncryptionWithProvider(t *testing.T) {
+cfg := &config.Main{
+SecretsEncryption: &config.SecretsEncryption{
+Enabled:  true,
+Provider: "aescbc",
+},
+}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if !strings.Contains(flags, "--secrets-encryption") {
+t.Errorf("Expected --secrets-encryption in flags, got: %s", flags)
+}
+if !strings.Contains(flags, "--secrets-encryption-provider=aescbc") {
+t.Errorf("Expected --secrets-encryption-provider=aescbc in flags, got: %s", flags)
+}
+}
+
+func TestBuildNetworkingAndSecurityFlags_SecretsEncryptionDisabled(t *testing.T) {
+cfg := &config.Main{
+SecretsEncryption: &config.SecretsEncryption{
+Enabled:  false,
+Provider: "aescbc",
+},
+}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if strings.Contains(flags, "--secrets-encryption") {
+t.Errorf("Expected no --secrets-encryption flags when disabled, got: %s", flags)
+}
+}
+
+func TestBuildNetworkingAndSecurityFlags_NilSecretsEncryption(t *testing.T) {
+cfg := &config.Main{
+Networking: config.Networking{
+ClusterDNS: "10.43.0.10",
+},
+}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if strings.Contains(flags, "--secrets-encryption") {
+t.Errorf("Expected no --secrets-encryption flags when nil, got: %s", flags)
+}
+if !strings.Contains(flags, "--cluster-dns=10.43.0.10") {
+t.Errorf("Expected --cluster-dns=10.43.0.10 in flags, got: %s", flags)
+}
+}
+
+func TestBuildNetworkingAndSecurityFlags_EmptyConfig(t *testing.T) {
+cfg := &config.Main{}
+flags := buildNetworkingAndSecurityFlags(cfg)
+if flags != "" {
+t.Errorf("Expected empty flags for empty config, got: %s", flags)
+}
+}
