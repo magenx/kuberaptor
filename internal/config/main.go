@@ -13,7 +13,7 @@ import (
 // SecretsEncryption represents secrets encryption at rest configuration for K3s
 type SecretsEncryption struct {
 	Enabled  bool   `yaml:"enabled,omitempty"`
-	Provider string `yaml:"secrets_encryption_provider,omitempty"`
+	Provider string `yaml:"provider,omitempty"`
 }
 
 // Main represents the main configuration structure
