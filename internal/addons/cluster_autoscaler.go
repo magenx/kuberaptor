@@ -585,14 +585,17 @@ func (c *ClusterAutoscalerInstaller) buildKubeletArgsString() string {
 	return strings.Join(args, " ")
 }
 
-// patchClusterRole patches the ClusterRole to add volumeattachments permission
+// patchClusterRole patches the ClusterRole to add missing permissions
 func (c *ClusterAutoscalerInstaller) patchClusterRole(doc map[string]interface{}) {
 	rules, ok := doc["rules"].([]interface{})
 	if !ok {
 		return
 	}
 
-	// Find the storage.k8s.io rule and add volumeattachments if not present
+	hasStorageRule := false
+	hasResourceRule := false
+
+	// Find existing rules and patch as needed
 	for _, rule := range rules {
 		ruleMap, ok := rule.(map[string]interface{})
 		if !ok {
@@ -604,35 +607,58 @@ func (c *ClusterAutoscalerInstaller) patchClusterRole(doc map[string]interface{}
 			continue
 		}
 
-		hasStorageAPI := false
 		for _, group := range apiGroups {
-			if groupStr, ok := group.(string); ok && groupStr == "storage.k8s.io" {
-				hasStorageAPI = true
-				break
+			groupStr, ok := group.(string)
+			if !ok {
+				continue
 			}
-		}
 
-		if !hasStorageAPI {
-			continue
-		}
+			switch groupStr {
+			case "storage.k8s.io":
+				hasStorageRule = true
+				resources, ok := ruleMap["resources"].([]interface{})
+				if !ok {
+					continue
+				}
 
-		resources, ok := ruleMap["resources"].([]interface{})
-		if !ok {
-			continue
-		}
+				// Check if volumeattachments is already present
+				hasVolumeAttachments := false
+				for _, res := range resources {
+					if resStr, ok := res.(string); ok && resStr == "volumeattachments" {
+						hasVolumeAttachments = true
+						break
+					}
+				}
 
-		// Check if volumeattachments is already present
-		hasVolumeAttachments := false
-		for _, res := range resources {
-			if resStr, ok := res.(string); ok && resStr == "volumeattachments" {
-				hasVolumeAttachments = true
-				break
+				if !hasVolumeAttachments {
+					resources = append(resources, "volumeattachments")
+					ruleMap["resources"] = resources
+				}
+
+			case "resource.k8s.io":
+				hasResourceRule = true
 			}
-		}
-
-		if !hasVolumeAttachments {
-			resources = append(resources, "volumeattachments")
-			ruleMap["resources"] = resources
 		}
 	}
+
+	// Add storage.k8s.io rule with volumeattachments if no storage rule exists at all
+	if !hasStorageRule {
+		rules = append(rules, map[string]interface{}{
+			"apiGroups": []interface{}{"storage.k8s.io"},
+			"resources": []interface{}{"volumeattachments"},
+			"verbs":     []interface{}{"get", "list", "watch"},
+		})
+	}
+
+	// Add resource.k8s.io rule for Dynamic Resource Allocation (DRA) resources
+	// Required by cluster-autoscaler using client-go v0.35.0+ (Kubernetes 1.32+)
+	if !hasResourceRule {
+		rules = append(rules, map[string]interface{}{
+			"apiGroups": []interface{}{"resource.k8s.io"},
+			"resources": []interface{}{"resourceclaims", "resourceslices", "deviceclasses"},
+			"verbs":     []interface{}{"get", "list", "watch"},
+		})
+	}
+
+	doc["rules"] = rules
 }
