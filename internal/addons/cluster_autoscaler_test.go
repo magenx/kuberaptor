@@ -656,6 +656,158 @@ func TestSSHKeyEnvironmentVariable(t *testing.T) {
 	}
 }
 
+// TestPatchClusterRole verifies that patchClusterRole adds required RBAC permissions
+func TestPatchClusterRole(t *testing.T) {
+	installer := &ClusterAutoscalerInstaller{}
+
+	t.Run("adds resource.k8s.io rule when missing", func(t *testing.T) {
+		doc := map[string]interface{}{
+			"kind": "ClusterRole",
+			"rules": []interface{}{
+				map[string]interface{}{
+					"apiGroups": []interface{}{"storage.k8s.io"},
+					"resources": []interface{}{"storageclasses", "volumeattachments"},
+					"verbs":     []interface{}{"get", "list", "watch"},
+				},
+			},
+		}
+
+		installer.patchClusterRole(doc)
+
+		rules, ok := doc["rules"].([]interface{})
+		if !ok {
+			t.Fatal("rules is not a slice")
+		}
+
+		var hasResourceRule bool
+		var resourceRuleResources []string
+		for _, rule := range rules {
+			ruleMap, ok := rule.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			apiGroups, ok := ruleMap["apiGroups"].([]interface{})
+			if !ok {
+				continue
+			}
+			for _, g := range apiGroups {
+				if g == "resource.k8s.io" {
+					hasResourceRule = true
+					for _, r := range ruleMap["resources"].([]interface{}) {
+						resourceRuleResources = append(resourceRuleResources, r.(string))
+					}
+				}
+			}
+		}
+
+		if !hasResourceRule {
+			t.Error("expected resource.k8s.io rule to be added, but it was not found")
+		}
+
+		for _, expected := range []string{"resourceclaims", "resourceslices", "deviceclasses"} {
+			found := false
+			for _, res := range resourceRuleResources {
+				if res == expected {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected resource %q in resource.k8s.io rule, but not found; got: %v", expected, resourceRuleResources)
+			}
+		}
+	})
+
+	t.Run("does not duplicate resource.k8s.io rule when already present", func(t *testing.T) {
+		doc := map[string]interface{}{
+			"kind": "ClusterRole",
+			"rules": []interface{}{
+				map[string]interface{}{
+					"apiGroups": []interface{}{"resource.k8s.io"},
+					"resources": []interface{}{"resourceclaims", "resourceslices", "deviceclasses"},
+					"verbs":     []interface{}{"get", "list", "watch"},
+				},
+			},
+		}
+
+		installer.patchClusterRole(doc)
+
+		rules, ok := doc["rules"].([]interface{})
+		if !ok {
+			t.Fatal("rules is not a slice")
+		}
+
+		count := 0
+		for _, rule := range rules {
+			ruleMap, ok := rule.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			apiGroups, ok := ruleMap["apiGroups"].([]interface{})
+			if !ok {
+				continue
+			}
+			for _, g := range apiGroups {
+				if g == "resource.k8s.io" {
+					count++
+				}
+			}
+		}
+
+		if count != 1 {
+			t.Errorf("expected exactly 1 resource.k8s.io rule, got %d", count)
+		}
+	})
+
+	t.Run("adds volumeattachments to existing storage.k8s.io rule", func(t *testing.T) {
+		doc := map[string]interface{}{
+			"kind": "ClusterRole",
+			"rules": []interface{}{
+				map[string]interface{}{
+					"apiGroups": []interface{}{"storage.k8s.io"},
+					"resources": []interface{}{"storageclasses"},
+					"verbs":     []interface{}{"get", "list", "watch"},
+				},
+			},
+		}
+
+		installer.patchClusterRole(doc)
+
+		rules, ok := doc["rules"].([]interface{})
+		if !ok {
+			t.Fatal("rules is not a slice")
+		}
+
+		for _, rule := range rules {
+			ruleMap, ok := rule.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			apiGroups, ok := ruleMap["apiGroups"].([]interface{})
+			if !ok {
+				continue
+			}
+			for _, g := range apiGroups {
+				if g == "storage.k8s.io" {
+					resources, ok := ruleMap["resources"].([]interface{})
+					if !ok {
+						t.Fatal("resources is not a slice")
+					}
+					found := false
+					for _, r := range resources {
+						if r == "volumeattachments" {
+							found = true
+						}
+					}
+					if !found {
+						t.Error("expected volumeattachments to be added to storage.k8s.io rule")
+					}
+				}
+			}
+		}
+	})
+}
+
 // stringPtr is a helper function to create string pointers for test data
 func stringPtr(s string) *string {
 	return &s
