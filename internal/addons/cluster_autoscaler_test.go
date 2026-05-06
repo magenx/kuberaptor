@@ -693,8 +693,16 @@ func TestPatchClusterRole(t *testing.T) {
 			for _, g := range apiGroups {
 				if g == "resource.k8s.io" {
 					hasResourceRule = true
-					for _, r := range ruleMap["resources"].([]interface{}) {
-						resourceRuleResources = append(resourceRuleResources, r.(string))
+					resList, ok := ruleMap["resources"].([]interface{})
+					if !ok {
+						t.Fatal("resources in resource.k8s.io rule is not a slice")
+					}
+					for _, r := range resList {
+						resStr, ok := r.(string)
+						if !ok {
+							t.Fatalf("resource entry is not a string: %v", r)
+						}
+						resourceRuleResources = append(resourceRuleResources, resStr)
 					}
 				}
 			}
