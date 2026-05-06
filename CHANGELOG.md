@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0-rc.3](https://github.com/magenx/kuberaptor/compare/v1.3.0-rc.2...v1.3.0-rc.3) (2026-05-06)
+
+
+### 🐛 Bug Fixes
+
+* Fix cluster-autoscaler missing resource.k8s.io RBAC permissions ([#214](https://github.com/magenx/kuberaptor/issues/214)) ([60bfb19](https://github.com/magenx/kuberaptor/commit/60bfb19d58e8a666315147827db1bdf6d920b30f))
+
 ## [1.3.0-rc.2](https://github.com/magenx/kuberaptor/compare/v1.3.0-rc.1...v1.3.0-rc.2) (2026-05-03)
 
 
