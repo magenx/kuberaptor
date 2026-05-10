@@ -3,7 +3,7 @@ module github.com/magenx/kuberaptor
 go 1.26.0
 
 require (
-	github.com/hetznercloud/hcloud-go/v2 v2.39.0
+	github.com/hetznercloud/hcloud-go/v2 v2.40.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.50.0
 	gopkg.in/yaml.v3 v3.0.1
