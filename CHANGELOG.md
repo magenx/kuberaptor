@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0-rc.6](https://github.com/magenx/kuberaptor/compare/v1.3.0-rc.5...v1.3.0-rc.6) (2026-05-24)
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([47a96f8](https://github.com/magenx/kuberaptor/commit/47a96f847049429b513247c70e9e2ad6d5a27119))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.40.0 to 2.41.2 ([#221](https://github.com/magenx/kuberaptor/issues/221)) ([47a96f8](https://github.com/magenx/kuberaptor/commit/47a96f847049429b513247c70e9e2ad6d5a27119))
+* **deps:** bump golang.org/x/crypto from 0.51.0 to 0.52.0 ([#220](https://github.com/magenx/kuberaptor/issues/220)) ([9cea70c](https://github.com/magenx/kuberaptor/commit/9cea70c95e091af2eaceed3cd073c91ecd77d238))
+
 ## [1.3.0-rc.5](https://github.com/magenx/kuberaptor/compare/v1.3.0-rc.4...v1.3.0-rc.5) (2026-05-18)
 
 
