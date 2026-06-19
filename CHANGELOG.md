@@ -1,5 +1,63 @@
 # Changelog
 
+## [1.3.0](https://github.com/magenx/kuberaptor/compare/v1.2.5...v1.3.0) (2026-06-14)
+
+
+### 🚀 Features
+
+* Add cluster_domain and secrets_encryption configuration support ([#210](https://github.com/magenx/kuberaptor/issues/210)) ([16206b9](https://github.com/magenx/kuberaptor/commit/16206b9e7a588c2bb42673ac6ae3eb7f87c73de1))
+* **autoscaler:** Hetzner server labels into cluster autoscaler ([#207](https://github.com/magenx/kuberaptor/issues/207)) ([8fc0d9c](https://github.com/magenx/kuberaptor/commit/8fc0d9c26b4ec6eee9437c00893ea9233208a802))
+* **autoscaler:** merge worker hetzner labels into autoscaled server labels ([8fc0d9c](https://github.com/magenx/kuberaptor/commit/8fc0d9c26b4ec6eee9437c00893ea9233208a802))
+
+
+### 🐛 Bug Fixes
+
+* Clarify hcloud cli download file format ([#196](https://github.com/magenx/kuberaptor/issues/196)) ([c56d060](https://github.com/magenx/kuberaptor/commit/c56d060cf9223bd8505decf8dc16adaed7b2b4cd))
+* Fix cluster-autoscaler missing resource.k8s.io RBAC permissions ([#214](https://github.com/magenx/kuberaptor/issues/214)) ([60bfb19](https://github.com/magenx/kuberaptor/commit/60bfb19d58e8a666315147827db1bdf6d920b30f))
+* Update deb file naming format for hcloud CLI ([#192](https://github.com/magenx/kuberaptor/issues/192)) ([d1bf4c0](https://github.com/magenx/kuberaptor/commit/d1bf4c0659fa133de45a619313ed77691097aec2))
+* Update deb file naming format for hcloud CLI ([#195](https://github.com/magenx/kuberaptor/issues/195)) ([e09065b](https://github.com/magenx/kuberaptor/commit/e09065b80e7fbf710ba882884f6b25f8f127b52d))
+
+
+### 🛠️ Refactoring
+
+* Harden LB target attachment against Hetzner network-attach propagation races in geo-replicated clusters ([#199](https://github.com/magenx/kuberaptor/issues/199)) ([c19500e](https://github.com/magenx/kuberaptor/commit/c19500ee77e42e3bd90322b8a0c06723eeb52d87))
+
+
+### 📝 Documentation
+
+* **config:** Add kured addon installation details to README ([#200](https://github.com/magenx/kuberaptor/issues/200)) ([8b280d1](https://github.com/magenx/kuberaptor/commit/8b280d1c14660b68af152c5506b071c3d1b65721))
+* **readme:** Enhance budget section with detailed cost estimates ([#202](https://github.com/magenx/kuberaptor/issues/202)) ([6ff5812](https://github.com/magenx/kuberaptor/commit/6ff58127d60d75bbf1630bf961efeb145e924b47))
+* **readme:** Quick Longhorn installation ([#201](https://github.com/magenx/kuberaptor/issues/201)) ([db2e04c](https://github.com/magenx/kuberaptor/commit/db2e04c301eb80c33ceb2a7107848684b94b2125))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([70c3ed1](https://github.com/magenx/kuberaptor/commit/70c3ed1c07ff2bb422973fd5af5f70cb2cbe90e9))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([1a51beb](https://github.com/magenx/kuberaptor/commit/1a51beb877eea302a6da49c8779bf310977cbd2b))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([47a96f8](https://github.com/magenx/kuberaptor/commit/47a96f847049429b513247c70e9e2ad6d5a27119))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([aa9092a](https://github.com/magenx/kuberaptor/commit/aa9092a69a3ce7f88611e70377252cbb6e5d9eb7))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([d566231](https://github.com/magenx/kuberaptor/commit/d566231146101f7f76e2c1ed781ceaf51d1f8643))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([d7e7fa1](https://github.com/magenx/kuberaptor/commit/d7e7fa131d624c261318a188279785a407b1037a))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.37.0 to 2.38.0 ([#203](https://github.com/magenx/kuberaptor/issues/203)) ([d7e7fa1](https://github.com/magenx/kuberaptor/commit/d7e7fa131d624c261318a188279785a407b1037a))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.38.0 to 2.39.0 ([#212](https://github.com/magenx/kuberaptor/issues/212)) ([d566231](https://github.com/magenx/kuberaptor/commit/d566231146101f7f76e2c1ed781ceaf51d1f8643))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.39.0 to 2.40.0 ([#216](https://github.com/magenx/kuberaptor/issues/216)) ([aa9092a](https://github.com/magenx/kuberaptor/commit/aa9092a69a3ce7f88611e70377252cbb6e5d9eb7))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.40.0 to 2.41.2 ([#221](https://github.com/magenx/kuberaptor/issues/221)) ([47a96f8](https://github.com/magenx/kuberaptor/commit/47a96f847049429b513247c70e9e2ad6d5a27119))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.41.2 to 2.42.0 ([#223](https://github.com/magenx/kuberaptor/issues/223)) ([1a51beb](https://github.com/magenx/kuberaptor/commit/1a51beb877eea302a6da49c8779bf310977cbd2b))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.42.0 to 2.43.0 ([#225](https://github.com/magenx/kuberaptor/issues/225)) ([70c3ed1](https://github.com/magenx/kuberaptor/commit/70c3ed1c07ff2bb422973fd5af5f70cb2cbe90e9))
+* **deps:** bump golang.org/x/crypto from 0.50.0 to 0.51.0 ([#217](https://github.com/magenx/kuberaptor/issues/217)) ([b180aea](https://github.com/magenx/kuberaptor/commit/b180aeaa9e48bf4de3681e284c9085b6dbe6550c))
+* **deps:** bump golang.org/x/crypto from 0.51.0 to 0.52.0 ([#220](https://github.com/magenx/kuberaptor/issues/220)) ([9cea70c](https://github.com/magenx/kuberaptor/commit/9cea70c95e091af2eaceed3cd073c91ecd77d238))
+* **deps:** bump golang.org/x/crypto from 0.52.0 to 0.53.0 ([#226](https://github.com/magenx/kuberaptor/issues/226)) ([c7655fe](https://github.com/magenx/kuberaptor/commit/c7655fe639e942e5012270d037e40792f2274e20))
+* **main:** kuberaptor 1.2.6-rc ([#197](https://github.com/magenx/kuberaptor/issues/197)) ([f165f49](https://github.com/magenx/kuberaptor/commit/f165f49c58384e55134431eaf392e4b1c3176d08))
+* **main:** kuberaptor 1.3.0-rc ([#198](https://github.com/magenx/kuberaptor/issues/198)) ([957b88e](https://github.com/magenx/kuberaptor/commit/957b88e177a20133cfcfe5871f5a4f527d4ccc2b))
+* **main:** kuberaptor 1.3.0-rc.1 ([#208](https://github.com/magenx/kuberaptor/issues/208)) ([aedfa3c](https://github.com/magenx/kuberaptor/commit/aedfa3c9c3502eb463e45270d7b2d59c1579732a))
+* **main:** kuberaptor 1.3.0-rc.2 ([#211](https://github.com/magenx/kuberaptor/issues/211)) ([c21301a](https://github.com/magenx/kuberaptor/commit/c21301a68c2124cc957d08ddf447a5f316c36ac5))
+* **main:** kuberaptor 1.3.0-rc.3 ([#213](https://github.com/magenx/kuberaptor/issues/213)) ([ad3d5f3](https://github.com/magenx/kuberaptor/commit/ad3d5f33c4af6a72cf6963ef4a58c86352fcd1bf))
+* **main:** kuberaptor 1.3.0-rc.4 ([#215](https://github.com/magenx/kuberaptor/issues/215)) ([e5b8673](https://github.com/magenx/kuberaptor/commit/e5b86733b8cd8dbbef26c57a3493d89e536ea43f))
+* **main:** kuberaptor 1.3.0-rc.5 ([#218](https://github.com/magenx/kuberaptor/issues/218)) ([a0aefa8](https://github.com/magenx/kuberaptor/commit/a0aefa870388d2833b1e24d29d5cafa7f5816586))
+* **main:** kuberaptor 1.3.0-rc.6 ([#219](https://github.com/magenx/kuberaptor/issues/219)) ([3665e60](https://github.com/magenx/kuberaptor/commit/3665e60f2be1d0e73111a33dc6c356281ddcda0d))
+* **main:** kuberaptor 1.3.0-rc.7 ([#222](https://github.com/magenx/kuberaptor/issues/222)) ([6d48e40](https://github.com/magenx/kuberaptor/commit/6d48e4025504e017ce7e56cfef3299967a2729a0))
+* **main:** kuberaptor 1.3.0-rc.8 ([#224](https://github.com/magenx/kuberaptor/issues/224)) ([1e50604](https://github.com/magenx/kuberaptor/commit/1e5060428e991941ff4b4ea40f6f22b878cf72f0))
+
 ## [1.3.0-rc.8](https://github.com/magenx/kuberaptor/compare/v1.3.0-rc.7...v1.3.0-rc.8) (2026-06-14)
 
 
