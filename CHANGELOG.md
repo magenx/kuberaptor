@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2-rc](https://github.com/magenx/kuberaptor/compare/v1.3.1...v1.3.2-rc) (2026-07-26)
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([df9c550](https://github.com/magenx/kuberaptor/commit/df9c5506122bd48f5e63cf8f83365b7e318b2db0))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.44.0 to 2.46.0 ([#232](https://github.com/magenx/kuberaptor/issues/232)) ([df9c550](https://github.com/magenx/kuberaptor/commit/df9c5506122bd48f5e63cf8f83365b7e318b2db0))
+
 ## [1.3.1](https://github.com/magenx/kuberaptor/compare/v1.3.0...v1.3.1) (2026-07-14)
 
 
