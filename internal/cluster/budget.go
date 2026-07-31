@@ -222,7 +222,7 @@ func (b *BudgetCalculator) getServerCosts(clusterLabel string) ([]ResourceCost, 
 		serverType := server.ServerType
 		var pricing *hcloud.ServerTypeLocationPricing
 		for _, p := range serverType.Pricings {
-			if p.Location.Name == server.Datacenter.Location.Name {
+			if p.Location.Name == server.Location.Name {
 				pricing = &p
 				break
 			}
