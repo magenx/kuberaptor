@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3-rc](https://github.com/magenx/kuberaptor/compare/v1.3.2...v1.3.3-rc) (2026-07-31)
+
+
+### 🐛 Bug Fixes
+
+* Fix location reference for server pricing lookup ([#235](https://github.com/magenx/kuberaptor/issues/235)) ([cec2cdc](https://github.com/magenx/kuberaptor/commit/cec2cdcf8c10e68c376414e7d2a6d448f8844090))
+
 ## [1.3.2](https://github.com/magenx/kuberaptor/compare/v1.3.1...v1.3.2) (2026-07-27)
 
 
