@@ -910,13 +910,13 @@ Additional charges may apply for network traffic above included limits.
 | Idempotence          | ✅ Available [default]  | ✅ Available [default]                  | ➖ Setup required                 |
 | Deployment           | ✅ 2-3 minutes          | ✅ 2-3 minutes                          | ➖ 30+ minutes                    |
 | Dependencies         | ✅ CLI tool only        | ➖ kubectl/helm required                | ➖ Account, Terraform, python     |
-| Data privacy         | ✅ Full control         | ✅ Full control                         | ➖ Third-party access             |
-| Credential exposure  | ✅ Local PC, Autoscaler | ➖ Local PC, Autoscaler, Nodes, Scripts | ➖ API tokens, third party access |
+| Data privacy         | ✅ Full control         | ➖ Shared [token](https://github.com/vitobotta/hetzner-k3s/blob/main/templates/firewall/firewall.sh) | ➖ Third-party access             |
+| Credential exposure  | ✅ Local PC, Autoscaler | ➖ Local PC, Autoscaler, Nodes, [Scripts](https://github.com/vitobotta/hetzner-k3s/blob/main/templates/firewall/firewall.sh) | ➖ API tokens, third party access |
 | Learning curve       | ✅ Low                  | ✅ Low                                  | ➖ Medium-High                    |
 | Monthly cost         | ✅ Infrastructure only  | ✅ Infrastructure only                  | ➖ Platform fees                  |
 |                      |                      |                                      |                                |
 | **Features**         |                      |                                      |                                |
-| Private Networking   | ✅ Available [default]  | ✅ Available                       | ➖ Setup required                 |
+| Private Networking   | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
 | NAT Gateway          | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
 | DNS Zone             | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
 | SSL Certificate      | ✅ Available [default]  | ➖ Setup required                       | ➖ Setup required                 |
