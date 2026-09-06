@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/hetznercloud/hcloud-go/v2 v2.47.0
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
