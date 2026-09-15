@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.4-rc](https://github.com/magenx/kuberaptor/compare/v1.3.3...v1.3.4-rc) (2026-08-06)
+
+
+### 📝 Documentation
+
+* Revise data privacy and credential exposure details ([#238](https://github.com/magenx/kuberaptor/issues/238)) ([de10eb4](https://github.com/magenx/kuberaptor/commit/de10eb482a285183824459c60fc70a918a959e1b))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([91193f5](https://github.com/magenx/kuberaptor/commit/91193f5256821ca9a6f0a4cdeb675ca9d4ffa5ba))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.46.0 to 2.47.0 ([#239](https://github.com/magenx/kuberaptor/issues/239)) ([91193f5](https://github.com/magenx/kuberaptor/commit/91193f5256821ca9a6f0a4cdeb675ca9d4ffa5ba))
+
 ## [1.3.3](https://github.com/magenx/kuberaptor/compare/v1.3.2...v1.3.3) (2026-07-31)
 
 
