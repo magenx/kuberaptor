@@ -105,7 +105,7 @@ jobs:
     name: Google osv-scanner
     needs: pre_release
     if: ${{ needs.pre_release.outputs.releases_created == 'true' && !contains(needs.pre_release.outputs.tag_name, vars.PRERELEASE_TYPE) }}
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@272ff57b30ae5bef2488ba122ab6852c0d735a2d # v2.3.8
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@8ac9e5ce44cc7178e0e04229a91bdcc003166e57 # v2.3.8
     with:
       scan-args: |-
         ./
