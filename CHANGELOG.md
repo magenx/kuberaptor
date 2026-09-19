@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.4-rc.1](https://github.com/magenx/kuberaptor/compare/v1.3.4-rc...v1.3.4-rc.1) (2026-09-19)
+
+
+### 🚦 Maintenance
+
+* **deps:** bump actions/checkout from 6.0.1 to 7.0.1 ([#251](https://github.com/magenx/kuberaptor/issues/251)) ([40c7bcf](https://github.com/magenx/kuberaptor/commit/40c7bcf2cd91b5e8a2197ab32c4c78c3739de61a))
+* **deps:** bump actions/setup-go from 6.1.0 to 7.0.0 ([#250](https://github.com/magenx/kuberaptor/issues/250)) ([b5a6986](https://github.com/magenx/kuberaptor/commit/b5a698631101041c507617cc5bd09533d29dbd28))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([d1b79f3](https://github.com/magenx/kuberaptor/commit/d1b79f30600a5c1c113717044dad4b254ed5e423))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.47.0 to 2.48.0 ([#247](https://github.com/magenx/kuberaptor/issues/247)) ([d1b79f3](https://github.com/magenx/kuberaptor/commit/d1b79f30600a5c1c113717044dad4b254ed5e423))
+* **deps:** bump github/codeql-action/analyze from 4.35.1 to 4.38.0 ([#248](https://github.com/magenx/kuberaptor/issues/248)) ([ac581fb](https://github.com/magenx/kuberaptor/commit/ac581fbb780fdaf1ba4fc023b300cc4e6cd362bc))
+* **deps:** bump github/codeql-action/init from 4.35.1 to 4.38.0 ([#249](https://github.com/magenx/kuberaptor/issues/249)) ([771f8ba](https://github.com/magenx/kuberaptor/commit/771f8baf29da49aa56390f75acd62255af06cc97))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([97061ce](https://github.com/magenx/kuberaptor/commit/97061cec073b1cbf040beec13e3013084e453300))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml from 272ff57b30ae5bef2488ba122ab6852c0d735a2d to 8ac9e5ce44cc7178e0e04229a91bdcc003166e57 ([#252](https://github.com/magenx/kuberaptor/issues/252)) ([97061ce](https://github.com/magenx/kuberaptor/commit/97061cec073b1cbf040beec13e3013084e453300))
+
 ## [1.3.4-rc](https://github.com/magenx/kuberaptor/compare/v1.3.3...v1.3.4-rc) (2026-08-06)
 
 
