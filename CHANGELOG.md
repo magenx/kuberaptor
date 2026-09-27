@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.4](https://github.com/magenx/kuberaptor/compare/v1.3.3...v1.3.4) (2026-09-27)
+
+
+### 📝 Documentation
+
+* Revise data privacy and credential exposure details ([#238](https://github.com/magenx/kuberaptor/issues/238)) ([de10eb4](https://github.com/magenx/kuberaptor/commit/de10eb482a285183824459c60fc70a918a959e1b))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump actions/checkout from 6.0.1 to 7.0.1 ([#251](https://github.com/magenx/kuberaptor/issues/251)) ([40c7bcf](https://github.com/magenx/kuberaptor/commit/40c7bcf2cd91b5e8a2197ab32c4c78c3739de61a))
+* **deps:** bump actions/setup-go from 6.1.0 to 7.0.0 ([#250](https://github.com/magenx/kuberaptor/issues/250)) ([b5a6986](https://github.com/magenx/kuberaptor/commit/b5a698631101041c507617cc5bd09533d29dbd28))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([d1b79f3](https://github.com/magenx/kuberaptor/commit/d1b79f30600a5c1c113717044dad4b254ed5e423))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([91193f5](https://github.com/magenx/kuberaptor/commit/91193f5256821ca9a6f0a4cdeb675ca9d4ffa5ba))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.46.0 to 2.47.0 ([#239](https://github.com/magenx/kuberaptor/issues/239)) ([91193f5](https://github.com/magenx/kuberaptor/commit/91193f5256821ca9a6f0a4cdeb675ca9d4ffa5ba))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.47.0 to 2.48.0 ([#247](https://github.com/magenx/kuberaptor/issues/247)) ([d1b79f3](https://github.com/magenx/kuberaptor/commit/d1b79f30600a5c1c113717044dad4b254ed5e423))
+* **deps:** bump github/codeql-action/analyze from 4.35.1 to 4.38.0 ([#248](https://github.com/magenx/kuberaptor/issues/248)) ([ac581fb](https://github.com/magenx/kuberaptor/commit/ac581fbb780fdaf1ba4fc023b300cc4e6cd362bc))
+* **deps:** bump github/codeql-action/init from 4.35.1 to 4.38.0 ([#249](https://github.com/magenx/kuberaptor/issues/249)) ([771f8ba](https://github.com/magenx/kuberaptor/commit/771f8baf29da49aa56390f75acd62255af06cc97))
+* **deps:** bump golang.org/x/crypto from 0.54.0 to 0.55.0 ([#242](https://github.com/magenx/kuberaptor/issues/242)) ([76c4c63](https://github.com/magenx/kuberaptor/commit/76c4c635712be5598826ea72c039ff3dd0ddad13))
+* **deps:** bump golang.org/x/crypto from 0.55.0 to 0.57.0 ([#244](https://github.com/magenx/kuberaptor/issues/244)) ([9913438](https://github.com/magenx/kuberaptor/commit/9913438567d74af379239193bb9f2d17cebf3beb))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([97061ce](https://github.com/magenx/kuberaptor/commit/97061cec073b1cbf040beec13e3013084e453300))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml from 272ff57b30ae5bef2488ba122ab6852c0d735a2d to 8ac9e5ce44cc7178e0e04229a91bdcc003166e57 ([#252](https://github.com/magenx/kuberaptor/issues/252)) ([97061ce](https://github.com/magenx/kuberaptor/commit/97061cec073b1cbf040beec13e3013084e453300))
+* **main:** kuberaptor 1.3.4-rc ([#241](https://github.com/magenx/kuberaptor/issues/241)) ([511f42e](https://github.com/magenx/kuberaptor/commit/511f42e4fdda2f1ef3c193daec9b4aec59b78401))
+* **main:** kuberaptor 1.3.4-rc.1 ([#245](https://github.com/magenx/kuberaptor/issues/245)) ([dfb8b85](https://github.com/magenx/kuberaptor/commit/dfb8b851a1eec764e0aa79d23869131359857f8b))
+
 ## [1.3.4-rc.1](https://github.com/magenx/kuberaptor/compare/v1.3.4-rc...v1.3.4-rc.1) (2026-09-19)
 
 
