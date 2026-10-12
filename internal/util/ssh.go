@@ -6,9 +6,7 @@ package util
 
 import (
 	"context"
-	"crypto/md5"
 	_ "embed"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net"
@@ -87,45 +85,6 @@ func (s *SSH) GetPublicKey() ([]byte, error) {
 		return nil, fmt.Errorf("no public key available")
 	}
 	return s.publicKey, nil
-}
-
-// CalculateFingerprint calculates the MD5 fingerprint of a public key
-// NOTE: MD5 is used here for compatibility with legacy SSH implementations
-// and Hetzner Cloud API expectations. While MD5 is cryptographically weak,
-// it's acceptable for this non-security-critical display/comparison purpose.
-// Modern SSH implementations prefer SHA256 fingerprints.
-func CalculateFingerprint(publicKeyData []byte) (string, error) {
-	// Parse the public key
-	parts := strings.Fields(string(publicKeyData))
-	if len(parts) < 2 {
-		return "", fmt.Errorf("invalid public key format")
-	}
-
-	keyData, err := base64.StdEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", fmt.Errorf("failed to decode public key: %w", err)
-	}
-
-	// MD5 hash for legacy compatibility (not for security purposes)
-	hash := md5.Sum(keyData)
-	fingerprint := fmt.Sprintf("%x", hash)
-
-	// Format as colon-separated pairs
-	var result []string
-	for i := 0; i < len(fingerprint); i += 2 {
-		result = append(result, fingerprint[i:i+2])
-	}
-
-	return strings.Join(result, ":"), nil
-}
-
-// CalculateFingerprintFromPath calculates the MD5 fingerprint of a public key from a file path
-func CalculateFingerprintFromPath(publicKeyPath string) (string, error) {
-	data, err := os.ReadFile(publicKeyPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read public key: %w", err)
-	}
-	return CalculateFingerprint(data)
 }
 
 // getSSHConfig returns SSH client configuration
