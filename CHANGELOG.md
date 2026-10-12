@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.5-rc](https://github.com/magenx/kuberaptor/compare/v1.3.4...v1.3.5-rc) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **security:** Remove MD5 helper, bump x/net and Go 1.26.9 ([#261](https://github.com/magenx/kuberaptor/issues/261)) ([8058cee](https://github.com/magenx/kuberaptor/commit/8058cee38b6e63db65abc3ce3815988c0478fc98))
+
 ## [1.3.4](https://github.com/magenx/kuberaptor/compare/v1.3.3...v1.3.4) (2026-10-11)
 
 
