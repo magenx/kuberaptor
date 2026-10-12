@@ -1,6 +1,6 @@
 module github.com/magenx/kuberaptor
 
-go 1.26.0
+go 1.26.9
 
 require (
 	github.com/hetznercloud/hcloud-go/v2 v2.52.0
