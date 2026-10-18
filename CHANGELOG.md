@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.6](https://github.com/magenx/kuberaptor/compare/v1.3.5...v1.3.6) (2026-10-18)
+
+
+### 🚦 Maintenance
+
+* **deps:** bump golang.org/x/crypto from 0.57.0 to 0.58.0 ([#264](https://github.com/magenx/kuberaptor/issues/264)) ([cc258a6](https://github.com/magenx/kuberaptor/commit/cc258a695b2cf7422576291c78897103d641d73f))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([2e7f9ad](https://github.com/magenx/kuberaptor/commit/2e7f9adba8a1093f42fe528e68d740a5067ea974))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml from 8ac9e5ce44cc7178e0e04229a91bdcc003166e57 to 9a96bc4d2b09685b6142bcfe25a3dc17cb2d7347 ([#265](https://github.com/magenx/kuberaptor/issues/265)) ([2e7f9ad](https://github.com/magenx/kuberaptor/commit/2e7f9adba8a1093f42fe528e68d740a5067ea974))
+* **main:** kuberaptor 1.3.6-rc ([#268](https://github.com/magenx/kuberaptor/issues/268)) ([9976f9b](https://github.com/magenx/kuberaptor/commit/9976f9b169f3c5f26d6f4227907b7daaea62bb5d))
+
 ## [1.3.6-rc](https://github.com/magenx/kuberaptor/compare/v1.3.5...v1.3.6-rc) (2026-10-18)
 
 
