@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.6-rc](https://github.com/magenx/kuberaptor/compare/v1.3.5...v1.3.6-rc) (2026-10-18)
+
+
+### 🚦 Maintenance
+
+* **deps:** bump golang.org/x/crypto from 0.57.0 to 0.58.0 ([#264](https://github.com/magenx/kuberaptor/issues/264)) ([cc258a6](https://github.com/magenx/kuberaptor/commit/cc258a695b2cf7422576291c78897103d641d73f))
+
 ## [1.3.5](https://github.com/magenx/kuberaptor/compare/v1.3.4...v1.3.5) (2026-10-12)
 
 
