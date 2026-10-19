@@ -50,6 +50,13 @@ var createCmd = &cobra.Command{
 			if err := installer.EnsureToolsInstalled(); err != nil {
 				return fmt.Errorf("failed to install required tools: %w", err)
 			}
+
+			// Cilium CNI is installed with the cilium CLI, so it is required only in cilium mode
+			if loader.Settings.Networking.CNI.Mode == "cilium" {
+				if err := installer.EnsureCiliumInstalled(); err != nil {
+					return fmt.Errorf("failed to install required tools: %w", err)
+				}
+			}
 		}
 
 		// Run comprehensive validator

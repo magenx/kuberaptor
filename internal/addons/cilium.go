@@ -7,6 +7,7 @@ package addons
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
@@ -49,6 +50,11 @@ func (c *CiliumInstaller) Install(firstMaster *hcloud.Server, masterSSHIP string
 	}
 
 	util.LogInfo("Installing Cilium CNI", "cilium")
+
+	// The cilium CLI must be available locally to install Cilium
+	if _, err := exec.LookPath("cilium"); err != nil {
+		return fmt.Errorf("cilium CLI not found in PATH; install it from https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/#install-the-cilium-cli or run create without --skip-tools")
+	}
 
 	// Install Cilium using the cilium CLI with local kubeconfig
 	if err := c.installCiliumCLI(); err != nil {

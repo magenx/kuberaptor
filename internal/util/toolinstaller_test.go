@@ -6,7 +6,9 @@ package util
 
 import (
 	"os"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -322,5 +324,40 @@ func TestRunCommand_SimpleCommand(t *testing.T) {
 	err := installer.runCommand(cmd, args...)
 	if err != nil {
 		t.Errorf("runCommand failed for simple echo command: %v", err)
+	}
+}
+
+func TestVerifySHA256(t *testing.T) {
+	dir := t.TempDir()
+	filePath := filepath.Join(dir, "cilium-linux-amd64.tar.gz")
+	if err := os.WriteFile(filePath, []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// sha256("hello")
+	good := "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824  cilium-linux-amd64.tar.gz\n"
+	goodPath := filepath.Join(dir, "good.sha256sum")
+	if err := os.WriteFile(goodPath, []byte(good), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := verifySHA256(filePath, goodPath); err != nil {
+		t.Errorf("verifySHA256 with matching checksum returned error: %v", err)
+	}
+
+	bad := strings.Repeat("0", 64) + "  cilium-linux-amd64.tar.gz\n"
+	badPath := filepath.Join(dir, "bad.sha256sum")
+	if err := os.WriteFile(badPath, []byte(bad), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := verifySHA256(filePath, badPath); err == nil {
+		t.Error("verifySHA256 with mismatched checksum should return error")
+	}
+
+	emptyPath := filepath.Join(dir, "empty.sha256sum")
+	if err := os.WriteFile(emptyPath, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := verifySHA256(filePath, emptyPath); err == nil {
+		t.Error("verifySHA256 with empty checksum file should return error")
 	}
 }
