@@ -6,9 +6,13 @@ package util
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -398,6 +402,116 @@ func (t *ToolInstaller) InstallKubectlAI() error {
 			runtime.GOOS,
 		)
 	}
+}
+
+// IsCiliumInstalled checks if the cilium CLI is available
+func (t *ToolInstaller) IsCiliumInstalled() bool {
+	_, err := exec.LookPath("cilium")
+	return err == nil
+}
+
+// InstallCilium installs the cilium CLI.
+// macOS: brew install cilium-cli
+// Linux: download the latest release tarball from GitHub and extract it to /usr/local/bin
+// Windows: not supported; cilium CLI must be installed manually
+func (t *ToolInstaller) InstallCilium() error {
+	fmt.Println("Installing cilium CLI...")
+	switch runtime.GOOS {
+	case "darwin":
+		return t.installWithBrew("cilium-cli")
+	case "linux":
+		return t.installCiliumLinux()
+	default:
+		return fmt.Errorf(
+			"automatic cilium CLI installation is not supported on %s; "+
+				"please install it manually: https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/#install-the-cilium-cli",
+			runtime.GOOS,
+		)
+	}
+}
+
+// installCiliumLinux downloads the latest cilium CLI release tarball from
+// GitHub, verifies its sha256 checksum and extracts the binary to /usr/local/bin.
+func (t *ToolInstaller) installCiliumLinux() error {
+	arch := runtime.GOARCH
+	if arch != "amd64" && arch != "arm64" {
+		return fmt.Errorf("unsupported architecture for cilium CLI install: %s", arch)
+	}
+
+	tarFile := fmt.Sprintf("cilium-linux-%s.tar.gz", arch)
+	downloadURL := fmt.Sprintf("https://github.com/cilium/cilium-cli/releases/latest/download/%s", tarFile)
+
+	tmpDir, err := os.MkdirTemp("", "cilium-cli-")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	tarPath := filepath.Join(tmpDir, tarFile)
+	sumPath := tarPath + ".sha256sum"
+
+	fmt.Printf("Downloading cilium CLI (%s)...\n", arch)
+	if err := t.runCommand("curl", "-fsSL", "-o", tarPath, downloadURL); err != nil {
+		return fmt.Errorf("failed to download cilium CLI: %w", err)
+	}
+	if err := t.runCommand("curl", "-fsSL", "-o", sumPath, downloadURL+".sha256sum"); err != nil {
+		return fmt.Errorf("failed to download cilium CLI checksum: %w", err)
+	}
+
+	if err := verifySHA256(tarPath, sumPath); err != nil {
+		return fmt.Errorf("cilium CLI checksum verification failed: %w", err)
+	}
+
+	if err := t.runCommand("tar", "xzf", tarPath, "-C", "/usr/local/bin", "cilium"); err != nil {
+		return fmt.Errorf("failed to extract cilium CLI to /usr/local/bin: %w", err)
+	}
+
+	fmt.Println("✓ cilium CLI installed successfully")
+	return nil
+}
+
+// verifySHA256 checks a file against a sha256sum-formatted checksum file
+// ("<hex digest>  <filename>").
+func verifySHA256(filePath, sumPath string) error {
+	sumData, err := os.ReadFile(sumPath)
+	if err != nil {
+		return fmt.Errorf("failed to read checksum file: %w", err)
+	}
+	fields := strings.Fields(string(sumData))
+	if len(fields) == 0 {
+		return fmt.Errorf("checksum file is empty")
+	}
+	expected := strings.ToLower(fields[0])
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return fmt.Errorf("failed to hash file: %w", err)
+	}
+	actual := hex.EncodeToString(h.Sum(nil))
+
+	if actual != expected {
+		return fmt.Errorf("sha256 mismatch: expected %s, got %s", expected, actual)
+	}
+	return nil
+}
+
+// EnsureCiliumInstalled checks for the cilium CLI and installs it if missing.
+// Only needed when the cluster uses Cilium as CNI.
+func (t *ToolInstaller) EnsureCiliumInstalled() error {
+	if t.IsCiliumInstalled() {
+		fmt.Println("✓ cilium CLI is already installed")
+		return nil
+	}
+	if err := t.InstallCilium(); err != nil {
+		return fmt.Errorf("cilium: %w", err)
+	}
+	return nil
 }
 
 // EnsureToolsInstalled ensures the package manager is available and then checks
