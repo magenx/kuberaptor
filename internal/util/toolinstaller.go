@@ -413,7 +413,7 @@ func (t *ToolInstaller) IsCiliumInstalled() bool {
 // InstallCilium installs the cilium CLI.
 // macOS: brew install cilium-cli
 // Linux: download the latest release tarball from GitHub and extract it to /usr/local/bin
-// Windows: not supported; cilium CLI must be installed manually
+// Windows: winget install -e --id Cilium.CiliumCLI
 func (t *ToolInstaller) InstallCilium() error {
 	fmt.Println("Installing cilium CLI...")
 	switch runtime.GOOS {
@@ -421,6 +421,8 @@ func (t *ToolInstaller) InstallCilium() error {
 		return t.installWithBrew("cilium-cli")
 	case "linux":
 		return t.installCiliumLinux()
+	case "windows":
+		return t.installWithWinget("Cilium.CiliumCLI")
 	default:
 		return fmt.Errorf(
 			"automatic cilium CLI installation is not supported on %s; "+
