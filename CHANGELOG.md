@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.7-rc](https://github.com/magenx/kuberaptor/compare/v1.3.6...v1.3.7-rc) (2026-11-06)
+
+
+### 🐛 Bug Fixes
+
+* **cilium:** Install cilium CLI when CNI mode is cilium ([#270](https://github.com/magenx/kuberaptor/issues/270)) ([c4dc297](https://github.com/magenx/kuberaptor/commit/c4dc297c77dc3270c6bf7c482fbc6130e2394b68))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([f487f47](https://github.com/magenx/kuberaptor/commit/f487f47fba32f9eecb9cd0aba7dfc05d180e8373))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.52.0 to 2.53.0 ([#274](https://github.com/magenx/kuberaptor/issues/274)) ([f487f47](https://github.com/magenx/kuberaptor/commit/f487f47fba32f9eecb9cd0aba7dfc05d180e8373))
+
 ## [1.3.6](https://github.com/magenx/kuberaptor/compare/v1.3.5...v1.3.6) (2026-10-18)
 
 
