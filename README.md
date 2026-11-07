@@ -492,6 +492,12 @@ masters_pool:
     enabled: true
     min_instances: 1                 # Can be 0: pool kubernetes labels/taints are passed to the autoscaler
     max_instances: 3                 # so pods that select or tolerate this pool can trigger scale-up from zero
+    # Optional per-pool autoscaler settings (sent only when set):
+    # image: ubuntu-24.04            # Override autoscaling_image for this pool (autoscaler >= v1.34)
+    # subnet_ip_range: 10.0.0.0/16   # Existing subnet of the private network (autoscaler >= v1.35)
+    # firewalls:                     # Existing firewalls added to the cluster firewall (autoscaler >= v1.37)
+    #   - php-firewall
+    # placement_group: mykubic-php   # Existing placement group name or ID (max 10 servers)
 
 # Global Load Balancer (Optional)
 # Simplify web traffic routing to internal node pool
@@ -571,6 +577,8 @@ addons:
     scale_down_delay_after_delete: "10s"
     scale_down_delay_after_failure: "3m"
     max_node_provision_time: "5m"
+    # default_subnet_ip_range: 10.0.0.0/16  # Optional: existing subnet for all autoscaled nodes (autoscaler >= v1.35)
+    # cluster_config_from_secret: true      # Optional: pass node pool config as a Secret file, not an env variable
   cloud_controller_manager:
     enabled: true
     manifest_url: "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.39.3/ccm-networks.yaml"
@@ -731,9 +739,25 @@ addons:
    - Default kubeconfig points to first region's API LB
    - All API LB IPs included in TLS SANs for certificate validity
 
-4. **Master Affinity**: Autoscaler preferentially runs on master nodes
+7. **Master Affinity**: Autoscaler preferentially runs on master nodes
    - Implements "master A → autoscaler A → pool A" pattern
    - Reduces cross-region latency for scaling operations
+
+#### Cluster Autoscaler Options
+
+All options are optional and sent to the Hetzner autoscaler provider only when set. `kuberaptor create` checks them against `container_image_tag`, so the autoscaler does not stop at startup on a bad value.
+
+| Setting | Where | Purpose | Autoscaler |
+|---------|-------|---------|------------|
+| `kubernetes.labels` / `kubernetes.taints` | worker pool | Used in scale-up simulation, so pods that select or tolerate the pool can scale it up from zero | any |
+| `autoscaling.image` | worker pool | Image for this pool's autoscaled nodes (overrides `autoscaling_image`) | >= v1.34 |
+| `autoscaling.subnet_ip_range` | worker pool | Existing subnet of the private network for this pool's nodes | >= v1.35 |
+| `default_subnet_ip_range` | `addons.cluster_autoscaler` | Existing subnet for all pools without `subnet_ip_range` | >= v1.35 |
+| `autoscaling.firewalls` | worker pool | Existing firewalls attached in addition to the cluster firewall | >= v1.37 |
+| `autoscaling.placement_group` | worker pool | Existing placement group name or ID. Kuberaptor names its placement groups `<cluster_name>-<placement_group.name>`. A placement group holds at most 10 servers | >= v1.33 |
+| `cluster_config_from_secret` | `addons.cluster_autoscaler` | Store the node pool config (it includes the k3s join token) in a Secret mounted as a file instead of an environment variable. Used automatically when the config is larger than 128 KiB | >= v1.33 |
+
+A network created by kuberaptor has one subnet, equal to `networking.private_network.subnet`. To place pools in different subnets, use `networking.private_network.existing_network_name` with a network that has those subnets.
 
 ### 4. High Availability with Placement Groups
 

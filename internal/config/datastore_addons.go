@@ -6,6 +6,8 @@ package config
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -134,7 +136,33 @@ type ClusterAutoscaler struct {
 	ScaleDownDelayAfterDelete  string `yaml:"scale_down_delay_after_delete,omitempty"`
 	ScaleDownDelayAfterFailure string `yaml:"scale_down_delay_after_failure,omitempty"`
 	MaxNodeProvisionTime       string `yaml:"max_node_provision_time,omitempty"`
+	// DefaultSubnetIPRange places autoscaled nodes of all pools in an existing subnet
+	// of the private network, in CIDR notation, unless a pool sets
+	// autoscaling.subnet_ip_range (cluster-autoscaler >= 1.35).
+	DefaultSubnetIPRange string `yaml:"default_subnet_ip_range,omitempty"`
+	// ClusterConfigFromSecret stores the node pool configuration in a Kubernetes
+	// Secret mounted as a file (HCLOUD_CLUSTER_CONFIG_FILE) instead of the
+	// HCLOUD_CLUSTER_CONFIG environment variable. Kuberaptor also uses the Secret
+	// when the configuration is too large for an environment variable.
+	ClusterConfigFromSecret bool `yaml:"cluster_config_from_secret,omitempty"`
 }
+
+// ClusterAutoscalerMinorVersion returns the Kubernetes minor version of the
+// cluster autoscaler image tag (for example 37 for "v1.37.0").
+// It returns false when the tag is not a v1.X.Y version (custom builds).
+func (c *ClusterAutoscaler) ClusterAutoscalerMinorVersion() (int, bool) {
+	m := clusterAutoscalerTagPattern.FindStringSubmatch(c.ContainerImageTag)
+	if m == nil {
+		return 0, false
+	}
+	minor, err := strconv.Atoi(m[1])
+	if err != nil {
+		return 0, false
+	}
+	return minor, true
+}
+
+var clusterAutoscalerTagPattern = regexp.MustCompile(`^v?1\.(\d+)\.\d+`)
 
 // SetDefaults sets default values for cluster autoscaler
 func (c *ClusterAutoscaler) SetDefaults() {
