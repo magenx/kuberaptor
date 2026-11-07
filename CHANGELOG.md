@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0-rc](https://github.com/magenx/kuberaptor/compare/v1.3.7-rc...v1.4.0-rc) (2026-11-07)
+
+
+### 🚀 Features
+
+* **autoscaler:** Add Hetzner provider options and bump addon versions ([#276](https://github.com/magenx/kuberaptor/issues/276)) ([f2bf4f4](https://github.com/magenx/kuberaptor/commit/f2bf4f4136614864d1e0ffbdf35a5f4489415f51))
+
 ## [1.3.7-rc](https://github.com/magenx/kuberaptor/compare/v1.3.6...v1.3.7-rc) (2026-11-06)
 
 
