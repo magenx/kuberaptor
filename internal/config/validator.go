@@ -38,6 +38,7 @@ func (v *Validator) Validate() error {
 	v.validateSecretsEncryption()
 	v.validateMasterPool()
 	v.validateWorkerPools()
+	v.validateClusterAutoscaler()
 	v.validateDatastore()
 	v.validateLoadBalancer()
 	v.validateDNSZone()
@@ -665,6 +666,114 @@ func (v *Validator) validatePlacementGroup(pg *PlacementGroupConfig, context str
 		if label.Key == "" {
 			v.errors = append(v.errors, fmt.Sprintf("%s: placement_group.labels[%d] has empty key", context, i))
 		}
+	}
+}
+
+// maxPlacementGroupSize is the maximum number of servers in a Hetzner spread placement group
+const maxPlacementGroupSize = 10
+
+// validateClusterAutoscaler validates the optional cluster autoscaler provider settings.
+// The Hetzner provider stops at startup on an invalid subnet, firewall or placement
+// group, so these are checked before the cluster is created.
+func (v *Validator) validateClusterAutoscaler() {
+	ca := v.config.Addons.ClusterAutoscaler
+	if ca == nil || !ca.Enabled {
+		return
+	}
+
+	minor, knownVersion := ca.ClusterAutoscalerMinorVersion()
+	requireVersion := func(setting string, required int) {
+		if knownVersion && minor < required {
+			v.errors = append(v.errors, fmt.Sprintf("%s requires cluster autoscaler v1.%d.0 or newer (container_image_tag is %s)", setting, required, ca.ContainerImageTag))
+		}
+	}
+
+	if ca.DefaultSubnetIPRange != "" {
+		requireVersion("addons.cluster_autoscaler.default_subnet_ip_range", 35)
+		v.validateAutoscalerSubnet(ca.DefaultSubnetIPRange, "addons.cluster_autoscaler.default_subnet_ip_range")
+	}
+
+	placementGroupTotals := make(map[string]int)
+	var placementGroupOrder []string
+	for _, pool := range v.config.WorkerNodePools {
+		if !pool.AutoscalingEnabled() {
+			continue
+		}
+		poolName := "unknown"
+		if pool.Name != nil {
+			poolName = *pool.Name
+		}
+		as := pool.Autoscaling
+
+		if as.Image != "" {
+			requireVersion(fmt.Sprintf("worker pool %s: autoscaling.image", poolName), 34)
+		}
+
+		if as.SubnetIPRange != "" {
+			requireVersion(fmt.Sprintf("worker pool %s: autoscaling.subnet_ip_range", poolName), 35)
+			v.validateAutoscalerSubnet(as.SubnetIPRange, fmt.Sprintf("worker pool %s: autoscaling.subnet_ip_range", poolName))
+		}
+
+		if len(as.Firewalls) > 0 {
+			requireVersion(fmt.Sprintf("worker pool %s: autoscaling.firewalls", poolName), 37)
+			for i, firewall := range as.Firewalls {
+				if strings.TrimSpace(firewall) == "" {
+					v.errors = append(v.errors, fmt.Sprintf("worker pool %s: autoscaling.firewalls[%d] is empty", poolName, i))
+				}
+			}
+		}
+
+		if as.PlacementGroup != "" {
+			if _, seen := placementGroupTotals[as.PlacementGroup]; !seen {
+				placementGroupOrder = append(placementGroupOrder, as.PlacementGroup)
+			}
+			placementGroupTotals[as.PlacementGroup] += as.MaxInstances
+		}
+	}
+
+	// A placement group holds at most 10 servers. Count static nodes that
+	// kuberaptor puts in the same placement group as well.
+	for _, ref := range placementGroupOrder {
+		total := placementGroupTotals[ref]
+		for _, pool := range v.config.WorkerNodePools {
+			if !pool.AutoscalingEnabled() && pool.PlacementGroup != nil &&
+				fmt.Sprintf("%s-%s", v.config.ClusterName, pool.PlacementGroup.Name) == ref {
+				total += pool.InstanceCount
+			}
+		}
+		if total > maxPlacementGroupSize {
+			v.errors = append(v.errors, fmt.Sprintf("placement group %s: autoscaling max_instances plus static nodes is %d, a placement group holds at most %d servers", ref, total, maxPlacementGroupSize))
+		}
+	}
+}
+
+// validateAutoscalerSubnet validates a subnet IP range used by the cluster autoscaler
+func (v *Validator) validateAutoscalerSubnet(cidr string, setting string) {
+	ip, subnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		v.errors = append(v.errors, fmt.Sprintf("%s: invalid CIDR %q", setting, cidr))
+		return
+	}
+	if !ip.Equal(subnet.IP) {
+		v.errors = append(v.errors, fmt.Sprintf("%s: %q is not a network address (use %s)", setting, cidr, subnet.String()))
+	}
+	if !v.config.Networking.PrivateNetwork.Enabled {
+		v.errors = append(v.errors, fmt.Sprintf("%s requires networking.private_network.enabled", setting))
+		return
+	}
+	// The subnets of an existing network are not known before the cluster is created
+	if v.config.Networking.PrivateNetwork.ExistingNetworkName != "" {
+		return
+	}
+	// A network created by kuberaptor has a single subnet equal to
+	// networking.private_network.subnet, and the provider only accepts the
+	// IP range of an existing subnet.
+	_, network, err := net.ParseCIDR(v.config.Networking.PrivateNetwork.Subnet)
+	if err != nil {
+		return
+	}
+	if subnet.String() != network.String() {
+		v.errors = append(v.errors, fmt.Sprintf("%s: %s is not a subnet of the private network, which has the single subnet %s (use networking.private_network.existing_network_name for a network with more subnets)", setting, subnet.String(), network.String()))
 	}
 }
 

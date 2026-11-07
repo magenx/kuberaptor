@@ -142,6 +142,19 @@ type Autoscaling struct {
 	Enabled      bool `yaml:"enabled,omitempty"`
 	MinInstances int  `yaml:"min_instances,omitempty"`
 	MaxInstances int  `yaml:"max_instances,omitempty"`
+	// Image overrides the global autoscaling_image/image for this pool's autoscaled nodes.
+	// Name, ID or snapshot label selector (cluster-autoscaler >= 1.34).
+	Image string `yaml:"image,omitempty"`
+	// SubnetIPRange places this pool's autoscaled nodes in an existing subnet of the
+	// private network, in CIDR notation (cluster-autoscaler >= 1.35).
+	SubnetIPRange string `yaml:"subnet_ip_range,omitempty"`
+	// Firewalls are extra existing firewall names or IDs attached to this pool's
+	// autoscaled nodes, in addition to the cluster firewall (cluster-autoscaler >= 1.37).
+	Firewalls []string `yaml:"firewalls,omitempty"`
+	// PlacementGroup is the name or ID of an existing placement group for this pool's
+	// autoscaled nodes. Placement groups created by kuberaptor are named
+	// "<cluster_name>-<placement_group.name>".
+	PlacementGroup string `yaml:"placement_group,omitempty"`
 }
 
 // PlacementGroupConfig represents Hetzner Placement Group configuration

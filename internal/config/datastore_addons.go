@@ -6,6 +6,8 @@ package config
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -119,7 +121,7 @@ func (c *CSIDriver) SetDefaults() {
 		c.Enabled = true
 	}
 	if c.ManifestURL == "" {
-		c.ManifestURL = "https://raw.githubusercontent.com/hetznercloud/csi-driver/v2.18.3/deploy/kubernetes/hcloud-csi.yml"
+		c.ManifestURL = "https://raw.githubusercontent.com/hetznercloud/csi-driver/v2.24.1/deploy/kubernetes/hcloud-csi.yml"
 	}
 }
 
@@ -134,7 +136,33 @@ type ClusterAutoscaler struct {
 	ScaleDownDelayAfterDelete  string `yaml:"scale_down_delay_after_delete,omitempty"`
 	ScaleDownDelayAfterFailure string `yaml:"scale_down_delay_after_failure,omitempty"`
 	MaxNodeProvisionTime       string `yaml:"max_node_provision_time,omitempty"`
+	// DefaultSubnetIPRange places autoscaled nodes of all pools in an existing subnet
+	// of the private network, in CIDR notation, unless a pool sets
+	// autoscaling.subnet_ip_range (cluster-autoscaler >= 1.35).
+	DefaultSubnetIPRange string `yaml:"default_subnet_ip_range,omitempty"`
+	// ClusterConfigFromSecret stores the node pool configuration in a Kubernetes
+	// Secret mounted as a file (HCLOUD_CLUSTER_CONFIG_FILE) instead of the
+	// HCLOUD_CLUSTER_CONFIG environment variable. Kuberaptor also uses the Secret
+	// when the configuration is too large for an environment variable.
+	ClusterConfigFromSecret bool `yaml:"cluster_config_from_secret,omitempty"`
 }
+
+// ClusterAutoscalerMinorVersion returns the Kubernetes minor version of the
+// cluster autoscaler image tag (for example 37 for "v1.37.0").
+// It returns false when the tag is not a v1.X.Y version (custom builds).
+func (c *ClusterAutoscaler) ClusterAutoscalerMinorVersion() (int, bool) {
+	m := clusterAutoscalerTagPattern.FindStringSubmatch(c.ContainerImageTag)
+	if m == nil {
+		return 0, false
+	}
+	minor, err := strconv.Atoi(m[1])
+	if err != nil {
+		return 0, false
+	}
+	return minor, true
+}
+
+var clusterAutoscalerTagPattern = regexp.MustCompile(`^v?1\.(\d+)\.\d+`)
 
 // SetDefaults sets default values for cluster autoscaler
 func (c *ClusterAutoscaler) SetDefaults() {
@@ -142,10 +170,10 @@ func (c *ClusterAutoscaler) SetDefaults() {
 		c.Enabled = true
 	}
 	if c.ManifestURL == "" {
-		c.ManifestURL = "https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/hetzner/examples/cluster-autoscaler-run-on-master.yaml"
+		c.ManifestURL = "https://raw.githubusercontent.com/kubernetes/autoscaler/cluster-autoscaler-1.37.0/cluster-autoscaler/cloudprovider/hetzner/examples/cluster-autoscaler-run-on-master.yaml"
 	}
 	if c.ContainerImageTag == "" {
-		c.ContainerImageTag = "v1.34.2"
+		c.ContainerImageTag = "v1.37.0"
 	}
 	if c.ScanInterval == "" {
 		c.ScanInterval = "10s"
@@ -177,7 +205,7 @@ func (c *CloudControllerManager) SetDefaults() {
 		c.Enabled = true
 	}
 	if c.ManifestURL == "" {
-		c.ManifestURL = "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.28.0/ccm-networks.yaml"
+		c.ManifestURL = "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.39.3/ccm-networks.yaml"
 	}
 }
 
@@ -195,10 +223,10 @@ func (s *SystemUpgradeController) SetDefaults() {
 		s.Enabled = true
 	}
 	if s.DeploymentManifestURL == "" {
-		s.DeploymentManifestURL = "https://github.com/rancher/system-upgrade-controller/releases/download/v0.18.0/system-upgrade-controller.yaml"
+		s.DeploymentManifestURL = "https://github.com/rancher/system-upgrade-controller/releases/download/v0.21.0/system-upgrade-controller.yaml"
 	}
 	if s.CRDManifestURL == "" {
-		s.CRDManifestURL = "https://github.com/rancher/system-upgrade-controller/releases/download/v0.18.0/crd.yaml"
+		s.CRDManifestURL = "https://github.com/rancher/system-upgrade-controller/releases/download/v0.21.0/crd.yaml"
 	}
 }
 
@@ -212,7 +240,7 @@ type Kured struct {
 // SetDefaults sets default values for Kured
 func (k *Kured) SetDefaults() {
 	if k.ManifestURL == "" {
-		k.ManifestURL = "https://github.com/kubereboot/kured/releases/download/1.21.0/kured-1.21.0-combined.yaml"
+		k.ManifestURL = "https://github.com/kubereboot/kured/releases/download/1.23.0/kured-1.23.0-combined.yaml"
 	}
 }
 

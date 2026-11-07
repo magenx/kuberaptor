@@ -307,7 +307,7 @@ hetzner_token: <your_hetzner_cloud_token_here>
 
 cluster_name: &cluster_name mykubic # Cluster name with yaml anchor
 kubeconfig_path: ~/.kube/config
-k3s_version: v1.35.3+k3s1
+k3s_version: v1.37.2+k3s1
 
 domain: &domain example.com   # Optional: Required for DNS zone and SSL certificate (&domain yaml anchor)
 locations: &locations         # Optional: &locations yaml anchor
@@ -356,7 +356,7 @@ networking:
     mode: flannel                       # Options: flannel, cilium
     cilium:                             # Cilium-specific configuration
       enabled: true                     # Enable Cilium CNI
-      version: "v1.19.2"                # Cilium version
+      version: "v1.20.4"                # Cilium version
       encryption_type: wireguard        # Options: wireguard, ipsec
       routing_mode: tunnel              # Options: tunnel, native
       tunnel_protocol: vxlan            # Options: vxlan, geneve
@@ -490,8 +490,14 @@ masters_pool:
   locations: *locations
   autoscaling:                       # Cluster Autoscaler enabled configuration
     enabled: true
-    min_instances: 1
-    max_instances: 3
+    min_instances: 1                 # Can be 0: pool kubernetes labels/taints are passed to the autoscaler
+    max_instances: 3                 # so pods that select or tolerate this pool can trigger scale-up from zero
+    # Optional per-pool autoscaler settings (sent only when set):
+    # image: ubuntu-24.04            # Override autoscaling_image for this pool (autoscaler >= v1.34)
+    # subnet_ip_range: 10.0.0.0/16   # Existing subnet of the private network (autoscaler >= v1.35)
+    # firewalls:                     # Existing firewalls added to the cluster firewall (autoscaler >= v1.37)
+    #   - php-firewall
+    # placement_group: mykubic-php   # Existing placement group name or ID (max 10 servers)
 
 # Global Load Balancer (Optional)
 # Simplify web traffic routing to internal node pool
@@ -547,7 +553,7 @@ ssl_certificate:
 addons:
   kured:
     enabled: true
-    manifest_url: "https://github.com/kubereboot/kured/releases/download/1.21.0/kured-1.21.0-combined.yaml"
+    manifest_url: "https://github.com/kubereboot/kured/releases/download/1.23.0/kured-1.23.0-combined.yaml"
     kured_options:
       - "--reboot-command=/usr/bin/systemctl reboot"
       - "--pre-reboot-node-labels=kured=rebooting"
@@ -561,23 +567,25 @@ addons:
     enabled: true
   csi_driver:
     enabled: true
-    manifest_url: "https://raw.githubusercontent.com/hetznercloud/csi-driver/v2.20.0/deploy/kubernetes/hcloud-csi.yml"
+    manifest_url: "https://raw.githubusercontent.com/hetznercloud/csi-driver/v2.24.1/deploy/kubernetes/hcloud-csi.yml"
   cluster_autoscaler:
     enabled: true
-    manifest_url: "https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/hetzner/examples/cluster-autoscaler-run-on-master.yaml"
-    container_image_tag: "v1.35.0"
+    manifest_url: "https://raw.githubusercontent.com/kubernetes/autoscaler/cluster-autoscaler-1.37.0/cluster-autoscaler/cloudprovider/hetzner/examples/cluster-autoscaler-run-on-master.yaml"
+    container_image_tag: "v1.37.0"          # Keep minor in line with k3s_version (v1.37.x)
     scan_interval: "10s"                        
     scale_down_delay_after_add: "10m"
     scale_down_delay_after_delete: "10s"
     scale_down_delay_after_failure: "3m"
     max_node_provision_time: "5m"
+    # default_subnet_ip_range: 10.0.0.0/16  # Optional: existing subnet for all autoscaled nodes (autoscaler >= v1.35)
+    # cluster_config_from_secret: true      # Optional: pass node pool config as a Secret file, not an env variable
   cloud_controller_manager:
     enabled: true
-    manifest_url: "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.30.1/ccm-networks.yaml"
+    manifest_url: "https://github.com/hetznercloud/hcloud-cloud-controller-manager/releases/download/v1.39.3/ccm-networks.yaml"
   system_upgrade_controller:
     enabled: true
-    deployment_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.19.0/system-upgrade-controller.yaml"
-    crd_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.19.0/crd.yaml"
+    deployment_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.21.0/system-upgrade-controller.yaml"
+    crd_manifest_url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.21.0/crd.yaml"
   embedded_registry_mirror:
     enabled: true
 
@@ -623,7 +631,7 @@ For maximum fault tolerance and geographic redundancy, distribute your cluster a
 cluster_name: eu-regional
 hetzner_token: ${HCLOUD_TOKEN}
 kubeconfig_path: ~/.kube/eu-regional-config
-k3s_version: v1.31.4+k3s1
+k3s_version: v1.37.2+k3s1
 
 # Distribute masters across 3 regions for HA
 masters_pool:
@@ -731,9 +739,25 @@ addons:
    - Default kubeconfig points to first region's API LB
    - All API LB IPs included in TLS SANs for certificate validity
 
-4. **Master Affinity**: Autoscaler preferentially runs on master nodes
+7. **Master Affinity**: Autoscaler preferentially runs on master nodes
    - Implements "master A → autoscaler A → pool A" pattern
    - Reduces cross-region latency for scaling operations
+
+#### Cluster Autoscaler Options
+
+All options are optional and sent to the Hetzner autoscaler provider only when set. `kuberaptor create` checks them against `container_image_tag`, so the autoscaler does not stop at startup on a bad value.
+
+| Setting | Where | Purpose | Autoscaler |
+|---------|-------|---------|------------|
+| `kubernetes.labels` / `kubernetes.taints` | worker pool | Used in scale-up simulation, so pods that select or tolerate the pool can scale it up from zero | any |
+| `autoscaling.image` | worker pool | Image for this pool's autoscaled nodes (overrides `autoscaling_image`) | >= v1.34 |
+| `autoscaling.subnet_ip_range` | worker pool | Existing subnet of the private network for this pool's nodes | >= v1.35 |
+| `default_subnet_ip_range` | `addons.cluster_autoscaler` | Existing subnet for all pools without `subnet_ip_range` | >= v1.35 |
+| `autoscaling.firewalls` | worker pool | Existing firewalls attached in addition to the cluster firewall | >= v1.37 |
+| `autoscaling.placement_group` | worker pool | Existing placement group name or ID. Kuberaptor names its placement groups `<cluster_name>-<placement_group.name>`. A placement group holds at most 10 servers | >= v1.33 |
+| `cluster_config_from_secret` | `addons.cluster_autoscaler` | Store the node pool config (it includes the k3s join token) in a Secret mounted as a file instead of an environment variable. Used automatically when the config is larger than 128 KiB | >= v1.33 |
+
+A network created by kuberaptor has one subnet, equal to `networking.private_network.subnet`. To place pools in different subnets, use `networking.private_network.existing_network_name` with a network that has those subnets.
 
 ### 4. High Availability with Placement Groups
 
@@ -744,8 +768,8 @@ Placement Groups ensure that each cloud server runs on a different physical host
 ```yaml
 cluster_name: ha-cluster
 hetzner_token: YOUR_HETZNER_API_TOKEN_HERE
-image: ubuntu-22.04
-k3s_version: v1.28.5+k3s1
+image: ubuntu-24.04
+k3s_version: v1.37.2+k3s1
 
 networking:
   ssh:
@@ -830,10 +854,10 @@ kuberaptor run --config cluster.yaml \
 ```
 
 ### Install Longhorn 
-> https://longhorn.io/docs/1.11.1/deploy/install/
+> https://longhorn.io/docs/1.13.0/deploy/install/
 ```
 kuberaptor run  -c cluster.yaml --command "sudo apt-get update && sudo apt-get install -y open-iscsi cryptsetup dmsetup nfs-common"
-kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.11.1/deploy/longhorn.yaml
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.13.0/deploy/longhorn.yaml
 ```
 
 ### Upgrade Cluster to New K3s Version
@@ -844,16 +868,19 @@ kuberaptor releases
 
 # Upgrade cluster
 kuberaptor upgrade --config cluster.yaml \
-  --new-k3s-version v1.32.1+k3s1
+  --new-k3s-version v1.37.2+k3s1
 
 # Verify upgrade
 kubectl get nodes
 
 # Force upgrade (skip confirmation)
 kuberaptor upgrade --config cluster.yaml \
-  --new-k3s-version v1.32.1+k3s1 \
+  --new-k3s-version v1.37.2+k3s1 \
   --force
 ```
+
+> **Note:** The upgrade does not change the cluster autoscaler. Keep `addons.cluster_autoscaler.container_image_tag`
+> on the same Kubernetes minor version as `k3s_version` (for example `v1.37.x` for `v1.37.2+k3s1`).
 
 ### Delete Cluster and Clean Up Resources
 
@@ -972,7 +999,7 @@ Additional charges may apply for network traffic above included limits.
 
 ### Prerequisites
 
-- **Go**: Version 1.26.0 or later
+- **Go**: Version 1.26.10 or later
 - **Make**: For using the Makefile
 - **Git**: For cloning the repository
 
@@ -1075,10 +1102,10 @@ kuberaptor version
 
 | Package | Purpose | Version |
 |---------|---------|---------|
-| `github.com/hetznercloud/hcloud-go/v2` | Official Hetzner Cloud SDK | v2.36.0 |
+| `github.com/hetznercloud/hcloud-go/v2` | Official Hetzner Cloud SDK | v2.53.0 |
 | `github.com/spf13/cobra` | CLI framework and commands | v1.10.2 |
 | `gopkg.in/yaml.v3` | YAML parsing and serialization | v3.0.1 |
-| `golang.org/x/crypto/ssh` | SSH client implementation | v0.48.0 |
+| `golang.org/x/crypto/ssh` | SSH client implementation | v0.58.0 |
 
 ### Testing Dependencies
 

@@ -26,12 +26,30 @@ import (
 //go:embed templates/worker_install_script.sh
 var workerInstallScriptTemplate string
 
+const (
+	// clusterConfigSecretName is the Secret that holds the node pool configuration
+	// when it is mounted as a file instead of passed as an environment variable
+	clusterConfigSecretName = "cluster-autoscaler-cluster-config"
+	// clusterConfigFileName is the key in the Secret and the mounted file name
+	clusterConfigFileName = "cluster-config.json"
+	// clusterConfigMountPath is the directory the Secret is mounted in
+	clusterConfigMountPath = "/etc/cluster-autoscaler"
+	// clusterConfigVolumeName is the pod volume that mounts the Secret
+	clusterConfigVolumeName = "cluster-config"
+	// maxClusterConfigEnvSize is the largest HCLOUD_CLUSTER_CONFIG value the kernel
+	// accepts: a "NAME=value" environment string is limited to 128 KiB (MAX_ARG_STRLEN)
+	maxClusterConfigEnvSize = 128*1024 - len("HCLOUD_CLUSTER_CONFIG=") - 1
+)
+
 // ClusterAutoscalerInstaller installs the cluster autoscaler
 type ClusterAutoscalerInstaller struct {
 	Config        *config.Main
 	SSHClient     *util.SSH
 	KubectlClient *util.KubectlClient
 	ctx           context.Context
+	// clusterConfigFile holds the node pool configuration JSON when it is
+	// delivered through a Secret file instead of an environment variable
+	clusterConfigFile string
 }
 
 // NewClusterAutoscalerInstaller creates a new cluster autoscaler installer
@@ -86,8 +104,14 @@ func (c *ClusterAutoscalerInstaller) generateManifest(firstMaster *hcloud.Server
 		return "", fmt.Errorf("failed to read manifest: %w", err)
 	}
 
+	return c.patchManifest(string(manifestBytes), firstMaster, masters, autoscalingPools, masterClusterIP, k3sToken)
+}
+
+// patchManifest patches the cluster autoscaler manifest resources
+func (c *ClusterAutoscalerInstaller) patchManifest(manifestStr string, firstMaster *hcloud.Server, masters []*hcloud.Server, autoscalingPools []config.WorkerNodePool, masterClusterIP string, k3sToken string) (string, error) {
+	c.clusterConfigFile = ""
+
 	// Split manifest into separate resources
-	manifestStr := string(manifestBytes)
 	resources := strings.Split(manifestStr, "---\n")
 
 	var patchedResources []string
@@ -124,7 +148,42 @@ func (c *ClusterAutoscalerInstaller) generateManifest(firstMaster *hcloud.Server
 		patchedResources = append(patchedResources, string(patchedBytes))
 	}
 
+	// Deliver the node pool configuration as a Secret file when requested or too large
+	// for an environment variable. The Secret is applied before the Deployment.
+	if c.clusterConfigFile != "" {
+		secret, err := c.buildClusterConfigSecret(c.clusterConfigFile)
+		if err != nil {
+			return "", err
+		}
+		patchedResources = append([]string{secret}, patchedResources...)
+	}
+
 	return strings.Join(patchedResources, "---\n"), nil
+}
+
+// buildClusterConfigSecret builds the Secret that holds the node pool configuration
+func (c *ClusterAutoscalerInstaller) buildClusterConfigSecret(clusterConfig string) (string, error) {
+	secret := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata": map[string]interface{}{
+			"name":      clusterConfigSecretName,
+			"namespace": "kube-system",
+			"labels": map[string]interface{}{
+				"app": "cluster-autoscaler",
+			},
+		},
+		"type": "Opaque",
+		"stringData": map[string]interface{}{
+			clusterConfigFileName: clusterConfig,
+		},
+	}
+
+	secretBytes, err := yaml.Marshal(secret)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal cluster config secret: %w", err)
+	}
+	return string(secretBytes), nil
 }
 
 // patchDeployment patches the deployment resource
@@ -218,6 +277,18 @@ func (c *ClusterAutoscalerInstaller) patchDeployment(doc map[string]interface{},
 	}
 	podSpec["containers"] = containers
 
+	// Mount the node pool configuration Secret when it is delivered as a file
+	if c.clusterConfigFile != "" {
+		volumes, _ := podSpec["volumes"].([]interface{})
+		volumes = append(volumes, map[string]interface{}{
+			"name": clusterConfigVolumeName,
+			"secret": map[string]interface{}{
+				"secretName": clusterConfigSecretName,
+			},
+		})
+		podSpec["volumes"] = volumes
+	}
+
 	return nil
 }
 
@@ -293,6 +364,17 @@ func (c *ClusterAutoscalerInstaller) patchAutoscalerContainer(container map[stri
 	}
 	container["env"] = env
 
+	// Mount the node pool configuration Secret when it is delivered as a file
+	if c.clusterConfigFile != "" {
+		volumeMounts, _ := container["volumeMounts"].([]interface{})
+		volumeMounts = append(volumeMounts, map[string]interface{}{
+			"name":      clusterConfigVolumeName,
+			"mountPath": clusterConfigMountPath,
+			"readOnly":  true,
+		})
+		container["volumeMounts"] = volumeMounts
+	}
+
 	return nil
 }
 
@@ -306,6 +388,26 @@ func (c *ClusterAutoscalerInstaller) buildEnvironmentVariables(firstMaster *hclo
 
 	// Encode to base64
 	clusterConfigBase64 := base64.StdEncoding.EncodeToString([]byte(clusterConfig))
+
+	// Pass the configuration as a mounted Secret file when requested, or when it is
+	// too large for an environment variable (the container would fail to start)
+	clusterConfigEnv := map[string]interface{}{
+		"name":  "HCLOUD_CLUSTER_CONFIG",
+		"value": clusterConfigBase64,
+	}
+	c.clusterConfigFile = ""
+	useFile := c.Config.Addons.ClusterAutoscaler != nil && c.Config.Addons.ClusterAutoscaler.ClusterConfigFromSecret
+	if !useFile && len(clusterConfigBase64) > maxClusterConfigEnvSize {
+		util.LogInfo(fmt.Sprintf("Cluster autoscaler config is %d bytes, too large for an environment variable: using a Secret file", len(clusterConfigBase64)), "addons")
+		useFile = true
+	}
+	if useFile {
+		c.clusterConfigFile = clusterConfig
+		clusterConfigEnv = map[string]interface{}{
+			"name":  "HCLOUD_CLUSTER_CONFIG_FILE",
+			"value": clusterConfigMountPath + "/" + clusterConfigFileName,
+		}
+	}
 
 	// Determine network name using shared utility function
 	networkName := util.ResolveNetworkName(c.Config)
@@ -341,10 +443,7 @@ func (c *ClusterAutoscalerInstaller) buildEnvironmentVariables(firstMaster *hclo
 				},
 			},
 		},
-		{
-			"name":  "HCLOUD_CLUSTER_CONFIG",
-			"value": clusterConfigBase64,
-		},
+		clusterConfigEnv,
 		{
 			"name":  "HCLOUD_FIREWALL",
 			"value": c.Config.ClusterName,
@@ -406,6 +505,11 @@ func (c *ClusterAutoscalerInstaller) buildClusterConfig(firstMaster *hcloud.Serv
 		"nodeConfigs": nodeConfigs,
 	}
 
+	// Optional: place autoscaled nodes in an existing subnet of the private network
+	if c.Config.Addons.ClusterAutoscaler != nil && c.Config.Addons.ClusterAutoscaler.DefaultSubnetIPRange != "" {
+		config["defaultSubnetIPRange"] = c.Config.Addons.ClusterAutoscaler.DefaultSubnetIPRange
+	}
+
 	configJSON, err := json.Marshal(config)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal cluster config: %w", err)
@@ -449,15 +553,58 @@ func (c *ClusterAutoscalerInstaller) buildNodeConfig(pool config.WorkerNodePool,
 		}
 	}
 
-	// Note: We do NOT pass Kubernetes labels and taints to the autoscaler provider
-	// The Hetzner autoscaler provider automatically sets ONLY the 'hcloud/node-group' label
-	// All other custom labels and taints MUST be set via kubelet flags (--node-label, --node-taint)
-	// in the cloud-init script when the node joins the cluster (see generateWorkerInstallScript)
-	// This is the correct approach as the cluster autoscaler is not responsible for setting these
-	return map[string]interface{}{
+	// Kubernetes labels and taints are applied to the node by kubelet flags
+	// (--node-label, --node-taint) in the cloud-init worker install script.
+	// They are also passed to the autoscaler provider as "labels" and "taints":
+	// the Hetzner provider uses them only to build the template node for
+	// scheduling simulation, it does not apply them to the node. Without them,
+	// pods that select the pool by label never trigger a scale-up from zero,
+	// and pods that do not tolerate the pool taints trigger useless scale-ups.
+	nodeConfig := map[string]interface{}{
 		"cloudInit":    cloudInitData,
 		"serverLabels": serverLabels,
-	}, nil
+	}
+
+	if kubernetesLabels := pool.KubernetesLabels(); len(kubernetesLabels) > 0 {
+		labels := make(map[string]string, len(kubernetesLabels))
+		for _, label := range kubernetesLabels {
+			labels[label.Key] = label.Value
+		}
+		nodeConfig["labels"] = labels
+	}
+
+	if kubernetesTaints := pool.KubernetesTaints(); len(kubernetesTaints) > 0 {
+		taints := make([]map[string]string, 0, len(kubernetesTaints))
+		for _, taint := range kubernetesTaints {
+			taints = append(taints, map[string]string{
+				"key":    taint.Key,
+				"value":  taint.Value,
+				"effect": taint.Effect,
+			})
+		}
+		nodeConfig["taints"] = taints
+	}
+
+	// Optional upstream provider settings, only sent when configured
+	if as := pool.Autoscaling; as != nil {
+		if as.Image != "" {
+			nodeConfig["imagesForArch"] = map[string]string{
+				"arm64": as.Image,
+				"amd64": as.Image,
+			}
+		}
+		if as.SubnetIPRange != "" {
+			nodeConfig["subnetIPRange"] = as.SubnetIPRange
+		}
+		if len(as.Firewalls) > 0 {
+			nodeConfig["firewalls"] = as.Firewalls
+		}
+		if as.PlacementGroup != "" {
+			nodeConfig["placementGroup"] = as.PlacementGroup
+		}
+	}
+
+	return nodeConfig, nil
 }
 
 // generateCloudInitForPool generates cloud-init data for a worker pool

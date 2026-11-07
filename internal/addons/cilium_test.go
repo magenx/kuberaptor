@@ -46,8 +46,8 @@ func TestCiliumInstaller_DefaultValues(t *testing.T) {
 	cilium.SetDefaults()
 
 	// Check that defaults are properly set
-	if cilium.Version != "1.17.2" {
-		t.Errorf("Expected Version to be '1.17.2', got '%s'", cilium.Version)
+	if cilium.Version != "1.20.4" {
+		t.Errorf("Expected Version to be '1.20.4', got '%s'", cilium.Version)
 	}
 	if cilium.EncryptionType != "wireguard" {
 		t.Errorf("Expected EncryptionType to be 'wireguard', got '%s'", cilium.EncryptionType)

@@ -12,7 +12,7 @@ import (
 // Default version constants
 const (
 	// DefaultCiliumVersion is the default Cilium version to install
-	DefaultCiliumVersion = "1.17.2"
+	DefaultCiliumVersion = "1.20.4"
 )
 
 // Networking represents networking configuration

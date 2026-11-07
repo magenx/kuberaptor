@@ -30,7 +30,7 @@ func TestK3sTokenEmbeddedInCloudInit(t *testing.T) {
 		Addons: config.Addons{
 			ClusterAutoscaler: &config.ClusterAutoscaler{
 				Enabled:                    true,
-				ContainerImageTag:          "v1.34.2",
+				ContainerImageTag:          "v1.37.0",
 				ScanInterval:               "10s",
 				ScaleDownDelayAfterAdd:     "10m",
 				ScaleDownDelayAfterDelete:  "10s",
@@ -287,7 +287,7 @@ func TestNATGatewayEnvironmentVariables(t *testing.T) {
 				Addons: config.Addons{
 					ClusterAutoscaler: &config.ClusterAutoscaler{
 						Enabled:                    true,
-						ContainerImageTag:          "v1.34.2",
+						ContainerImageTag:          "v1.37.0",
 						ScanInterval:               "10s",
 						ScaleDownDelayAfterAdd:     "10m",
 						ScaleDownDelayAfterDelete:  "10s",
@@ -430,7 +430,7 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 		Addons: config.Addons{
 			ClusterAutoscaler: &config.ClusterAutoscaler{
 				Enabled:                    true,
-				ContainerImageTag:          "v1.34.2",
+				ContainerImageTag:          "v1.37.0",
 				ScanInterval:               "10s",
 				ScaleDownDelayAfterAdd:     "10m",
 				ScaleDownDelayAfterDelete:  "10s",
@@ -560,15 +560,25 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 					}
 				}
 
-				// Verify that Kubernetes labels and taints are NOT passed to the autoscaler
-				// The cluster autoscaler is not responsible for setting these on nodes
-				// Instead, they should be set via kubelet flags in the cloud-init script
-				if _, ok := nodeConfig["labels"]; ok {
-					t.Error("Node config should NOT contain labels field - labels should be set via cloud-init kubelet flags, not by autoscaler")
+				// Verify that Kubernetes labels and taints are passed to the autoscaler
+				// for template node scheduling simulation (scale-from-zero support).
+				// They are still applied to the node by kubelet flags in cloud-init.
+				labels, ok := nodeConfig["labels"].(map[string]string)
+				if !ok {
+					t.Fatal("Node config should contain labels field as map[string]string")
+				}
+				if labels["app"] != "web" {
+					t.Errorf("labels[\"app\"] = %q, expected %q", labels["app"], "web")
 				}
 
-				if _, ok := nodeConfig["taints"]; ok {
-					t.Error("Node config should NOT contain taints field - taints should be set via cloud-init kubelet flags, not by autoscaler")
+				taints, ok := nodeConfig["taints"].([]map[string]string)
+				if !ok {
+					t.Fatal("Node config should contain taints field as []map[string]string")
+				}
+				expectedTaint := map[string]string{"key": "dedicated", "value": "workload", "effect": "NoSchedule"}
+				if len(taints) != 1 || taints[0]["key"] != expectedTaint["key"] ||
+					taints[0]["value"] != expectedTaint["value"] || taints[0]["effect"] != expectedTaint["effect"] {
+					t.Errorf("taints = %v, expected [%v]", taints, expectedTaint)
 				}
 
 				// Verify cloudInit field exists
@@ -581,7 +591,7 @@ func TestServerLabelsInNodeConfig(t *testing.T) {
 				// the --node-label and --node-taint flags. Since the script is gzip+base64 encoded
 				// in the cloud-init, we can't easily search for the literal flags.
 				// The important thing is that:
-				// 1. Labels/taints are NOT in the nodeConfig for the autoscaler
+				// 1. Labels/taints are in the nodeConfig for autoscaler simulation
 				// 2. Cloud-init is present and will set them via kubelet flags
 				t.Logf("Cloud-init generated successfully with length: %d bytes", len(cloudInitStr))
 			}
@@ -605,7 +615,7 @@ func TestSSHKeyEnvironmentVariable(t *testing.T) {
 		Addons: config.Addons{
 			ClusterAutoscaler: &config.ClusterAutoscaler{
 				Enabled:                    true,
-				ContainerImageTag:          "v1.34.2",
+				ContainerImageTag:          "v1.37.0",
 				ScanInterval:               "10s",
 				ScaleDownDelayAfterAdd:     "10m",
 				ScaleDownDelayAfterDelete:  "10s",
@@ -819,4 +829,41 @@ func TestPatchClusterRole(t *testing.T) {
 // stringPtr is a helper function to create string pointers for test data
 func stringPtr(s string) *string {
 	return &s
+}
+
+// TestNodeConfigWithoutKubernetesLabelsOrTaints verifies that labels and taints
+// are omitted from the node config when the pool defines none.
+func TestNodeConfigWithoutKubernetesLabelsOrTaints(t *testing.T) {
+	cfg := &config.Main{
+		ClusterName: "test-cluster",
+		K3sVersion:  "v1.32.0+k3s1",
+		Image:       "ubuntu-24.04",
+		Networking: config.Networking{
+			SSH: config.SSH{Port: 22},
+		},
+		Addons: config.Addons{
+			ClusterAutoscaler: &config.ClusterAutoscaler{Enabled: true},
+		},
+	}
+	pool := config.WorkerNodePool{
+		NodePool: config.NodePool{
+			Name:         stringPtr("workers"),
+			InstanceType: "cpx32",
+			Autoscaling:  &config.Autoscaling{Enabled: true, MinInstances: 0, MaxInstances: 3},
+		},
+		Locations: []string{"fsn1"},
+	}
+
+	installer := NewClusterAutoscalerInstaller(cfg, nil)
+	firstMaster := &hcloud.Server{Name: "test-master-1"}
+	nodeConfig, err := installer.buildNodeConfig(pool, "fsn1", firstMaster, []*hcloud.Server{firstMaster}, "10.0.0.1", "token")
+	if err != nil {
+		t.Fatalf("Failed to build node config: %v", err)
+	}
+	if _, ok := nodeConfig["labels"]; ok {
+		t.Error("Node config should not contain labels when the pool has no Kubernetes labels")
+	}
+	if _, ok := nodeConfig["taints"]; ok {
+		t.Error("Node config should not contain taints when the pool has no Kubernetes taints")
+	}
 }
