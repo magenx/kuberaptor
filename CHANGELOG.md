@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.0](https://github.com/magenx/kuberaptor/compare/v1.3.6...v1.4.0) (2026-11-07)
+
+
+### 🚀 Features
+
+* **autoscaler:** Add Hetzner provider options and bump addon versions ([#276](https://github.com/magenx/kuberaptor/issues/276)) ([f2bf4f4](https://github.com/magenx/kuberaptor/commit/f2bf4f4136614864d1e0ffbdf35a5f4489415f51))
+
+
+### 🐛 Bug Fixes
+
+* **cilium:** Install cilium CLI when CNI mode is cilium ([#270](https://github.com/magenx/kuberaptor/issues/270)) ([c4dc297](https://github.com/magenx/kuberaptor/commit/c4dc297c77dc3270c6bf7c482fbc6130e2394b68))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 ([f487f47](https://github.com/magenx/kuberaptor/commit/f487f47fba32f9eecb9cd0aba7dfc05d180e8373))
+* **deps:** bump github.com/hetznercloud/hcloud-go/v2 from 2.52.0 to 2.53.0 ([#274](https://github.com/magenx/kuberaptor/issues/274)) ([f487f47](https://github.com/magenx/kuberaptor/commit/f487f47fba32f9eecb9cd0aba7dfc05d180e8373))
+* **main:** kuberaptor 1.3.7-rc ([#271](https://github.com/magenx/kuberaptor/issues/271)) ([14bb2c3](https://github.com/magenx/kuberaptor/commit/14bb2c36b2313c91a13ca89e6c12ad49b5551eb3))
+* **main:** kuberaptor 1.4.0-rc ([#275](https://github.com/magenx/kuberaptor/issues/275)) ([dd4b4ba](https://github.com/magenx/kuberaptor/commit/dd4b4baa6eb001bb9b140bddc0b0c3653d527f4e))
+
 ## [1.4.0-rc](https://github.com/magenx/kuberaptor/compare/v1.3.7-rc...v1.4.0-rc) (2026-11-07)
 
 
