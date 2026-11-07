@@ -449,15 +449,39 @@ func (c *ClusterAutoscalerInstaller) buildNodeConfig(pool config.WorkerNodePool,
 		}
 	}
 
-	// Note: We do NOT pass Kubernetes labels and taints to the autoscaler provider
-	// The Hetzner autoscaler provider automatically sets ONLY the 'hcloud/node-group' label
-	// All other custom labels and taints MUST be set via kubelet flags (--node-label, --node-taint)
-	// in the cloud-init script when the node joins the cluster (see generateWorkerInstallScript)
-	// This is the correct approach as the cluster autoscaler is not responsible for setting these
-	return map[string]interface{}{
+	// Kubernetes labels and taints are applied to the node by kubelet flags
+	// (--node-label, --node-taint) in the cloud-init worker install script.
+	// They are also passed to the autoscaler provider as "labels" and "taints":
+	// the Hetzner provider uses them only to build the template node for
+	// scheduling simulation, it does not apply them to the node. Without them,
+	// pods that select the pool by label never trigger a scale-up from zero,
+	// and pods that do not tolerate the pool taints trigger useless scale-ups.
+	nodeConfig := map[string]interface{}{
 		"cloudInit":    cloudInitData,
 		"serverLabels": serverLabels,
-	}, nil
+	}
+
+	if kubernetesLabels := pool.KubernetesLabels(); len(kubernetesLabels) > 0 {
+		labels := make(map[string]string, len(kubernetesLabels))
+		for _, label := range kubernetesLabels {
+			labels[label.Key] = label.Value
+		}
+		nodeConfig["labels"] = labels
+	}
+
+	if kubernetesTaints := pool.KubernetesTaints(); len(kubernetesTaints) > 0 {
+		taints := make([]map[string]string, 0, len(kubernetesTaints))
+		for _, taint := range kubernetesTaints {
+			taints = append(taints, map[string]string{
+				"key":    taint.Key,
+				"value":  taint.Value,
+				"effect": taint.Effect,
+			})
+		}
+		nodeConfig["taints"] = taints
+	}
+
+	return nodeConfig, nil
 }
 
 // generateCloudInitForPool generates cloud-init data for a worker pool
