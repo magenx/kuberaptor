@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.1-rc](https://github.com/magenx/kuberaptor/compare/v1.4.0...v1.4.1-rc) (2026-11-13)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump golang.org/x/crypto and golang.org/x/net (GO-2026-5932) ([#280](https://github.com/magenx/kuberaptor/issues/280)) ([22ec8dc](https://github.com/magenx/kuberaptor/commit/22ec8dc13a5f82f0b74cc3d06b6ce03c8eba8780))
+
+
+### 🚦 Maintenance
+
+* **deps:** bump github/codeql-action/analyze from 4.38.0 to 4.39.3 ([#278](https://github.com/magenx/kuberaptor/issues/278)) ([7fe4ec2](https://github.com/magenx/kuberaptor/commit/7fe4ec2ccd6a5fcdd821557540603c99964d8133))
+* **deps:** bump github/codeql-action/init from 4.38.0 to 4.39.3 ([#279](https://github.com/magenx/kuberaptor/issues/279)) ([a7120a8](https://github.com/magenx/kuberaptor/commit/a7120a8c76034a0b4d50e32b62aeef16374170dc))
+
 ## [1.4.0](https://github.com/magenx/kuberaptor/compare/v1.3.6...v1.4.0) (2026-11-07)
 
 
